@@ -54,8 +54,8 @@ namespace SeleniumExcel
             List<string> searchTerms = new List<string>();
             string searchString = null;//the string we will be using to search
 
-            GetExcelElements(pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave);
-            Results(piwbDriver,pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave,searchString);
+            //GetExcelElements(pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave,rune);
+            //Results(piwbDriver,pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave,searchString);
             
             piwbDriver.Close();
         }
@@ -70,8 +70,8 @@ namespace SeleniumExcel
             List<string> runElements = new List<string>();
             string searchString = null;//the string we will be using to search
 
-            GetExcelElements(m_leeExcelObject, m_strWorkbookName, m_strWorksheetName, headerNames, searchTerms, resultsToSave);
-            Results(m_iwbWebDriver, m_leeExcelObject, m_strWorkbookName, m_strWorksheetName, headerNames, searchTerms, resultsToSave, searchString);
+            GetExcelElements(m_leeExcelObject, m_strWorkbookName, m_strWorksheetName, headerNames, searchTerms, resultsToSave, runElements);
+            Results(m_iwbWebDriver, m_leeExcelObject, m_strWorkbookName, m_strWorksheetName, headerNames, searchTerms, resultsToSave, searchString, runElements);
 
             m_iwbWebDriver.Close();
         }
@@ -88,11 +88,25 @@ namespace SeleniumExcel
         /// <param name="plSearchStrings"></param>
         /// <param name="plResultNumbers"></param>
         /// <param name="pstrSearchString"></param>
-        public void Results(IWebDriver piwbDriver, libExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName, List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, string pstrSearchString)
+        public void Results(IWebDriver piwbDriver, libExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName, List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, string pstrSearchString, List<string> plRunElements)
         {
             //This cycle will be used to determine the amount of results to search
             for (int listIndex = 0; listIndex <= plResultNumbers.Count - 1; listIndex++)
             {
+                
+                string RunV = plRunElements[listIndex];
+                if (RunV==" ")
+                {
+                    continue;
+                }
+                else
+                {
+                    if (RunV == "0")
+                    {
+                        continue;
+                    }
+                }
+
                 int elementsToSave = int.Parse(plResultNumbers[listIndex]); //converts the strings inside the resultsToSave list into integers we will use to determine how many results we will save for that particular search
                 pstrSearchString = plSearchStrings[listIndex]; //gets a string from the searchTerms list and adds it to the variable so we can better send it to the Google search bar
                 piwbDriver.FindElement(By.Id("lst-ib")).SendKeys(pstrSearchString); //finds the search bar and sends the string we want to search into it
@@ -140,22 +154,32 @@ namespace SeleniumExcel
         /// <param name="plHeaderNames"></param>
         /// <param name="plSearchStrings"></param>
         /// <param name="plResultNumbers"></param>
-        public void GetExcelElements(libExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName, List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers)
+        public void GetExcelElements(libExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName, List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements)
         {
-            FileStream stream = new FileStream(@"E:\" + pstrWorkbookName + ".xlsx", FileMode.Open); //creates a file stream to the file we want to manipulate
-            ExcelPackage objExcel = new ExcelPackage();
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            objExcel.Load(stream);
-            ExcelWorksheet worksheet = objExcel.Workbook.Worksheets[pstrWorksheetName];
+            try
+            {
+                FileStream stream = new FileStream(@"D:\" + pstrWorkbookName + ".xlsx", FileMode.Open); //creates a file stream to the file we want to manipulate
+                ExcelPackage objExcel = new ExcelPackage();
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                objExcel.Load(stream);
 
-            pleeExcelObject.GetWorksheetHeader(worksheet, plHeaderNames);
-            pleeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Input Parameter"), plSearchStrings);
-            pleeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Number of results to save"), plResultNumbers);
+                ExcelWorksheet worksheet = objExcel.Workbook.Worksheets[pstrWorksheetName];
 
-            stream.Close();
-            stream.Dispose();
-            objExcel.Save();
-            objExcel.Dispose();
+                pleeExcelObject.GetWorksheetHeader(worksheet, plHeaderNames);
+                pleeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Input Parameter"), plSearchStrings);
+                pleeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Number of results to save"), plResultNumbers);
+                pleeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Run"), plRunElements);
+
+                stream.Close();
+                stream.Dispose();
+                objExcel.Save();
+                objExcel.Dispose();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("{0} Exception: ", e);
+            }
+            
         }
 
         public int GetColumnIndex(List<string> plList, string pstrColumnName)

@@ -268,7 +268,7 @@ namespace PruebaExcel_EPplus
 
         public void DataManipulation(string pstrWorkbookName, string pstrWorksheetName)
         {
-            using (FileStream stream = new FileStream(@"E:\" + pstrWorkbookName + ".xlsx", FileMode.Open))
+            using (FileStream stream = new FileStream(@"D:\" + pstrWorkbookName + ".xlsx", FileMode.Open))
             {
                 using (ExcelPackage excelObj = new ExcelPackage())
                 {
@@ -316,7 +316,7 @@ namespace PruebaExcel_EPplus
 
         public void FindElements(string pstrWorkbookName, string pstrWorksheetName)
         {
-            using (FileStream stream = new FileStream(@"E:\" + pstrWorkbookName + ".xlsx", FileMode.Open)) //creates a file stream to the file we want to manipulate
+            using (FileStream stream = new FileStream(@"D:\" + pstrWorkbookName + ".xlsx", FileMode.Open)) //creates a file stream to the file we want to manipulate
             {
                 using (ExcelPackage objExcel = new ExcelPackage())
                 {
@@ -368,7 +368,7 @@ namespace PruebaExcel_EPplus
 
         public string FindElement(string pstrWorkbookName, string pstrWorksheetName, int pintRow, string pstrColumnName)
         {
-            using (FileStream stream = new FileStream(@"E:\" + pstrWorkbookName + ".xlsx", FileMode.Open)) //creates a file stream to the file we want to manipulate
+            using (FileStream stream = new FileStream(@"D:\" + pstrWorkbookName + ".xlsx", FileMode.Open)) //creates a file stream to the file we want to manipulate
             {
                 using (ExcelPackage objExcel = new ExcelPackage())
                 {
@@ -562,7 +562,7 @@ namespace PruebaExcel_EPplus
         //This Excel_Mod method it's just for update a single cell  
         public void Excel_Mod_SingleWFI(string pstrWorkbookName, string pstrWorksheetName, int row, int col, string val)
         {
-            FileInfo file = new FileInfo(@"E:\" + pstrWorkbookName + ".xlsx");
+            FileInfo file = new FileInfo(@"D:\" + pstrWorkbookName + ".xlsx");
             using (ExcelPackage excelPackage = new ExcelPackage(file))
             {
                 ExcelWorkbook excelWorkBook = excelPackage.Workbook;
