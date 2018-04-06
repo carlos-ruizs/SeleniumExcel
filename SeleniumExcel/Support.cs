@@ -49,7 +49,6 @@ namespace SeleniumExcel
             List<string> headerNames = new List<string>();
             List<string> resultsToSave = new List<string>();
             List<string> searchTerms = new List<string>();
-            string searchString = null;//the string we will be using to search
 
             //GetExcelElements(pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave);
             //Results(piwbDriver,pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave,searchString);
@@ -89,6 +88,31 @@ namespace SeleniumExcel
             //This cycle will be used to determine the amount of results to search
             for (int listIndex = 0; listIndex <= plResultNumbers.Count - 1; listIndex++)
             {
+                //TODO get this if-else out of here, and into the main Program.cs file but with the same logic
+                string RunV = plRunElements[listIndex];
+
+                if (RunV == " ")
+
+                {
+
+                    continue;
+
+                }
+
+                else
+
+                {
+
+                    if (RunV == "0")
+
+                    {
+
+                        continue;
+
+                    }
+
+                }
+
                 int elementsToSave = int.Parse(plResultNumbers[listIndex]); //converts the strings inside the resultsToSave list into integers we will use to determine how many results we will save for that particular search
                 m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(plSearchStrings[listIndex]); //finds the search bar and sends the string we want to search into it
                     
@@ -137,21 +161,28 @@ namespace SeleniumExcel
         /// <param name="plResultNumbers"></param>
         public void GetExcelElements(List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements)
         {
-            FileStream stream = new FileStream(@"E:\" + m_strWorkbookName + ".xlsx", FileMode.Open); //creates a file stream to the file we want to manipulate
-            ExcelPackage objExcel = new ExcelPackage();
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            objExcel.Load(stream);
-            ExcelWorksheet worksheet = objExcel.Workbook.Worksheets[m_strWorksheetName];
+            try
+            {
+                FileStream stream = new FileStream(@"E:\" + m_strWorkbookName + ".xlsx", FileMode.Open); //creates a file stream to the file we want to manipulate
+                ExcelPackage objExcel = new ExcelPackage();
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                objExcel.Load(stream);
+                ExcelWorksheet worksheet = objExcel.Workbook.Worksheets[m_strWorksheetName];
 
-            m_leeExcelObject.GetWorksheetHeader(worksheet, plHeaderNames);
-            m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Input Parameter"), plSearchStrings);
-            m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Number of results to save"), plResultNumbers);
-            m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Run"), plRunElements);
+                m_leeExcelObject.GetWorksheetHeader(worksheet, plHeaderNames);
+                m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Input Parameter"), plSearchStrings);
+                m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Number of results to save"), plResultNumbers);
+                m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Run"), plRunElements);
 
-            stream.Close();
-            stream.Dispose();
-            objExcel.Save();
-            objExcel.Dispose();
+                stream.Close();
+                stream.Dispose();
+                objExcel.Save();
+                objExcel.Dispose();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("{0} Exception: ", e);
+            }
         }
 
         public int GetColumnIndex(List<string> plList, string pstrColumnName)
