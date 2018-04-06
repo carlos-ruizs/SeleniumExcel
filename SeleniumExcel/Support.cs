@@ -17,12 +17,12 @@ namespace SeleniumExcel
         public string m_strWorkbookName;
         public string m_strWorksheetName;
         public IWebDriver m_iwbWebDriver;
-        public libExcel_epp m_leeExcelObject;
+        public LibExcel_epp m_leeExcelObject;
 
         public string ProprWorkbookName {get => m_strWorkbookName; set => m_strWorkbookName = value;}
         public string ProprWorksheetName { get => m_strWorksheetName; set => m_strWorksheetName = value; }
         public IWebDriver ProprDriver { get => m_iwbWebDriver; set => m_iwbWebDriver = value; }
-        public libExcel_epp PropExcelObject { get => m_leeExcelObject; set => m_leeExcelObject = value; }
+        public LibExcel_epp PropExcelObject { get => m_leeExcelObject; set => m_leeExcelObject = value; }
 
 
         //constructor
@@ -31,7 +31,7 @@ namespace SeleniumExcel
 
         }
 
-        public Support(string pstrWorkbookName, string pstrWorksheetName, IWebDriver piwbDriver, libExcel_epp pleeExcelObject)
+        public Support(string pstrWorkbookName, string pstrWorksheetName, IWebDriver piwbDriver, LibExcel_epp pleeExcelObject)
         {
             m_iwbWebDriver = piwbDriver;
             m_leeExcelObject = pleeExcelObject;
@@ -39,13 +39,10 @@ namespace SeleniumExcel
             m_strWorksheetName = pstrWorksheetName;
         }
 
-        //@TODO cambiar la estructura de esta cosa para hacerla aún más modular (dividirla en funciones)
-        //@TODO agregar una función que meta los nombres de los enlaces guardados en el Excel
-        //@TODO cambiar la manera en la que mete las cosas al Excel para que sea en base al título de la columna y no estático
-        //@TODO intentar hacerlo todo menos estático
-        //@TODO cambiar un poco la parte del webdriver para que sea su propia clase
-        //@TODO poner un método para revisar si existe un archivo de Excel y controlar qué pasa si hay o no hay
-        public void SearchGoogle(IWebDriver piwbDriver, libExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName)
+        //TODO cambiar la manera en la que mete las cosas al Excel para que sea en base al título de la columna y no estático
+        //TODO intentar hacerlo todo menos estático
+        //TODO poner un método para revisar si existe un archivo de Excel y controlar qué pasa si hay o no hay
+        public void SearchGoogle(IWebDriver piwbDriver, LibExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName)
         {
             piwbDriver.Navigate().GoToUrl("http://www.google.com/");
 
@@ -54,8 +51,8 @@ namespace SeleniumExcel
             List<string> searchTerms = new List<string>();
             string searchString = null;//the string we will be using to search
 
-            GetExcelElements(pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave);
-            Results(piwbDriver,pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave,searchString);
+            //GetExcelElements(pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave);
+            //Results(piwbDriver,pleeExcelObject,pstrWorkbookName,pstrWorksheetName,headerNames,searchTerms,resultsToSave,searchString);
             
             piwbDriver.Close();
         }
@@ -68,10 +65,9 @@ namespace SeleniumExcel
             List<string> resultsToSave = new List<string>();
             List<string> searchTerms = new List<string>();
             List<string> runElements = new List<string>();
-            string searchString = null;//the string we will be using to search
 
-            GetExcelElements(m_leeExcelObject, m_strWorkbookName, m_strWorksheetName, headerNames, searchTerms, resultsToSave);
-            Results(m_iwbWebDriver, m_leeExcelObject, m_strWorkbookName, m_strWorksheetName, headerNames, searchTerms, resultsToSave, searchString);
+            GetExcelElements(headerNames, searchTerms, resultsToSave, runElements);
+            Results(headerNames, searchTerms, resultsToSave,runElements);
 
             m_iwbWebDriver.Close();
         }
@@ -88,14 +84,13 @@ namespace SeleniumExcel
         /// <param name="plSearchStrings"></param>
         /// <param name="plResultNumbers"></param>
         /// <param name="pstrSearchString"></param>
-        public void Results(IWebDriver piwbDriver, libExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName, List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, string pstrSearchString)
+        public void Results(List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements)
         {
             //This cycle will be used to determine the amount of results to search
             for (int listIndex = 0; listIndex <= plResultNumbers.Count - 1; listIndex++)
             {
                 int elementsToSave = int.Parse(plResultNumbers[listIndex]); //converts the strings inside the resultsToSave list into integers we will use to determine how many results we will save for that particular search
-                pstrSearchString = plSearchStrings[listIndex]; //gets a string from the searchTerms list and adds it to the variable so we can better send it to the Google search bar
-                piwbDriver.FindElement(By.Id("lst-ib")).SendKeys(pstrSearchString); //finds the search bar and sends the string we want to search into it
+                m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(plSearchStrings[listIndex]); //finds the search bar and sends the string we want to search into it
                     
                 /*
                 Checks if it's the first time it's searching on Google 
@@ -105,27 +100,27 @@ namespace SeleniumExcel
                 */
                 if (listIndex == 0)
                 {
-                    piwbDriver.FindElement(By.Name("btnK")).Click();
+                    m_iwbWebDriver.FindElement(By.Name("btnK")).Click();
                 }
                 else
                 {
-                    piwbDriver.FindElement(By.Name("btnG")).Click();
+                    m_iwbWebDriver.FindElement(By.Name("btnG")).Click();
                 }
 
-                IList<IWebElement> h3Links = piwbDriver.FindElements(By.ClassName("g")); //saves all the links inside the webpage from the "g" class into an IList
-                string totalSearchResults = piwbDriver.FindElement(By.Id("resultStats")).Text; //gets the total amount of results for that particular search
-                IList<IWebElement> relatedResults = piwbDriver.FindElements(By.ClassName("nVcaUb")); //saves the links for all the related searches results into an IList
+                IList<IWebElement> h3Links = m_iwbWebDriver.FindElements(By.ClassName("g")); //saves all the links inside the webpage from the "g" class into an IList
+                string totalSearchResults = m_iwbWebDriver.FindElement(By.Id("resultStats")).Text; //gets the total amount of results for that particular search
+                IList<IWebElement> relatedResults = m_iwbWebDriver.FindElements(By.ClassName("nVcaUb")); //saves the links for all the related searches results into an IList
 
 
                 //Sends the data we want to save into the worksheet for the corresponding column 
                 //Also gets the lists from before and builds a big string with all the results that were saved in both their hyperlink and text forms
-                pleeExcelObject.Excel_Mod_SingleWFI(pstrWorkbookName, pstrWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Saved Results Links"), GetResultsHref(h3Links, elementsToSave - 1));
-                pleeExcelObject.Excel_Mod_SingleWFI(pstrWorkbookName, pstrWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Saved Results Text"), GetResultsTxt(h3Links, elementsToSave - 1));//debe tomar el nombre de la columna donde lo va a poner y el de la fila igual (el término de búsqueda)
-                pleeExcelObject.Excel_Mod_SingleWFI(pstrWorkbookName, pstrWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Related Results Links"), GetResultsHref(relatedResults, relatedResults.Count - 1));
-                pleeExcelObject.Excel_Mod_SingleWFI(pstrWorkbookName, pstrWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Related Results Text"), GetResultsTxt(relatedResults, relatedResults.Count - 1));
-                pleeExcelObject.Excel_Mod_SingleWFI(pstrWorkbookName, pstrWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Total number of results"), GetTotalSearchResults(totalSearchResults));
+                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Saved Results Links"), GetResultsHref(h3Links, elementsToSave - 1));
+                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Saved Results Text"), GetResultsTxt(h3Links, elementsToSave - 1));//debe tomar el nombre de la columna donde lo va a poner y el de la fila igual (el término de búsqueda)
+                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Related Results Links"), GetResultsHref(relatedResults, relatedResults.Count - 1));
+                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Related Results Text"), GetResultsTxt(relatedResults, relatedResults.Count - 1));
+                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Total number of results"), GetTotalSearchResults(totalSearchResults));
 
-                piwbDriver.FindElement(By.Id("lst-ib")).Clear(); //clears the search field when we finish with a search
+                m_iwbWebDriver.FindElement(By.Id("lst-ib")).Clear(); //clears the search field when we finish with a search
             }
         }
 
@@ -140,17 +135,18 @@ namespace SeleniumExcel
         /// <param name="plHeaderNames"></param>
         /// <param name="plSearchStrings"></param>
         /// <param name="plResultNumbers"></param>
-        public void GetExcelElements(libExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName, List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers)
+        public void GetExcelElements(List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements)
         {
-            FileStream stream = new FileStream(@"E:\" + pstrWorkbookName + ".xlsx", FileMode.Open); //creates a file stream to the file we want to manipulate
+            FileStream stream = new FileStream(@"E:\" + m_strWorkbookName + ".xlsx", FileMode.Open); //creates a file stream to the file we want to manipulate
             ExcelPackage objExcel = new ExcelPackage();
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             objExcel.Load(stream);
-            ExcelWorksheet worksheet = objExcel.Workbook.Worksheets[pstrWorksheetName];
+            ExcelWorksheet worksheet = objExcel.Workbook.Worksheets[m_strWorksheetName];
 
-            pleeExcelObject.GetWorksheetHeader(worksheet, plHeaderNames);
-            pleeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Input Parameter"), plSearchStrings);
-            pleeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Number of results to save"), plResultNumbers);
+            m_leeExcelObject.GetWorksheetHeader(worksheet, plHeaderNames);
+            m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Input Parameter"), plSearchStrings);
+            m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Number of results to save"), plResultNumbers);
+            m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Run"), plRunElements);
 
             stream.Close();
             stream.Dispose();

@@ -15,7 +15,7 @@ using System.Diagnostics;
 namespace PruebaExcel_EPplus
 {
 
-    public class libExcel_epp
+    public class LibExcel_epp
     {
         //atributes
         public ExcelPackage m_objExcel; //the Excel app itself
@@ -39,12 +39,12 @@ namespace PruebaExcel_EPplus
         public string String { get; set; }
 
         //methods
-        public libExcel_epp() // default constructor
+        public LibExcel_epp() // default constructor
         {
             this.m_objExcel = new ExcelPackage();
         }
 
-        public libExcel_epp(string pstrWorkbookName) // Constructor that receives the name of the Woorkbook as it's parameter
+        public LibExcel_epp(string pstrWorkbookName) // Constructor that receives the name of the Woorkbook as it's parameter
         {
             this.m_objExcel = new ExcelPackage();
             this.m_strFileName = pstrWorkbookName;
@@ -52,7 +52,7 @@ namespace PruebaExcel_EPplus
             m_objExcel.Save();
         }
 
-        public libExcel_epp(string pstrWorkbookName, string pstrWorksheetName) // Constructor that receives the name of the Workbook and a Worksheet to start
+        public LibExcel_epp(string pstrWorkbookName, string pstrWorksheetName) // Constructor that receives the name of the Workbook and a Worksheet to start
         {
             this.m_objExcel = new ExcelPackage();
             this.m_strFileName = pstrWorkbookName;
@@ -480,8 +480,6 @@ namespace PruebaExcel_EPplus
 
             return cellValue;
         }
-
-
 
         public void Excel_Create(string SheetName, int col1, int col2, string col3, string URL)
         {

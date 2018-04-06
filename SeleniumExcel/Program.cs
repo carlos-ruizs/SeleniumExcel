@@ -17,7 +17,7 @@ namespace SeleniumExcel
         static void Main(string[] args)
         {
             IWebDriver driverFF = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
-            libExcel_epp objeto_Excel = new libExcel_epp();
+            LibExcel_epp objeto_Excel = new LibExcel_epp();
             Support objeto_Support = new Support("WorkbookSelenium", "Sheet1", driverFF, objeto_Excel);
             objeto_Support.SearchGoogle();
         }
