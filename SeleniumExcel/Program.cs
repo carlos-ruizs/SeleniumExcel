@@ -8,6 +8,7 @@ using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 using PruebaExcel_EPplus;
 using OfficeOpenXml;
+using System.IO;
 
 
 namespace SeleniumExcel
@@ -21,12 +22,21 @@ namespace SeleniumExcel
     {
         static void Main(string[] args)
         {
-            IWebDriver driverFF = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
-            LibExcel_epp objeto_Excel = new LibExcel_epp();
-            Support objeto_Support = new Support("WorkbookSelenium", "Sheet1", driverFF, objeto_Excel);
-            objeto_Support.SearchGoogle();
+            FileInfo excelFile = new FileInfo(@"E:\WorkbookSelenium.xlsx");
 
-            //re
+            //checks if the file we have in excelFile exists and if it does, it instantiates the objects for the webdriver and everything else
+            if (excelFile.Exists)
+            {
+                IWebDriver driverFF = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
+                LibExcel_epp objeto_Excel = new LibExcel_epp();
+                Support objeto_Support = new Support("WorkbookSelenium", "Sheet1", driverFF, objeto_Excel);
+                objeto_Support.SearchGoogle();
+            }
+            else
+            {
+                Console.WriteLine("The file in " + excelFile.FullName + " wasn't found"); //Prints the full path of the file that we tried to use
+                Console.ReadKey();
+            }
         }
     }
 }
