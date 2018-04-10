@@ -18,6 +18,10 @@ namespace SeleniumExcel
         public string m_strWorksheetName;
         public IWebDriver m_iwbWebDriver;
         public LibExcel_epp m_leeExcelObject;
+        public List<string> m_plHeaderNames; //list of headers in the Excel file
+        public List<string> m_plSearchTerms; //list of search strings in the Excel file
+        public List<string> m_plNumberOfResultsToSave; //integers that we use to know how many results we will save inside the worksheet
+        public List<string> m_plRunElements; //column that tells us if a search string is to be executed or not
 
         public string ProprWorkbookName {get => m_strWorkbookName; set => m_strWorkbookName = value;}
         public string ProprWorksheetName { get => m_strWorksheetName; set => m_strWorksheetName = value; }
@@ -37,6 +41,10 @@ namespace SeleniumExcel
             m_leeExcelObject = pleeExcelObject;
             m_strWorkbookName = pstrWorkbookName;
             m_strWorksheetName = pstrWorksheetName;
+            m_plHeaderNames = new List<string>();
+            m_plSearchTerms = new List<string>();
+            m_plNumberOfResultsToSave = new List<string>();
+            m_plRunElements = new List<string>();
         }
 
         //TODO cambiar la manera en la que mete las cosas al Excel para que sea en base al título de la columna y no estático
@@ -60,13 +68,8 @@ namespace SeleniumExcel
         {
             m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
 
-            List<string> headerNames = new List<string>();
-            List<string> resultsToSave = new List<string>();
-            List<string> searchTerms = new List<string>();
-            List<string> runElements = new List<string>();
-
-            GetExcelElements(headerNames, searchTerms, resultsToSave, runElements);
-            Results(headerNames, searchTerms, resultsToSave,runElements);
+            GetExcelElements(m_plHeaderNames, m_plSearchTerms, m_plNumberOfResultsToSave, m_plRunElements);
+            Results(m_plHeaderNames, m_plSearchTerms, m_plNumberOfResultsToSave, m_plRunElements);
 
             m_iwbWebDriver.Close();
         }
@@ -173,6 +176,32 @@ namespace SeleniumExcel
                 m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Input Parameter"), plSearchStrings);
                 m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Number of results to save"), plResultNumbers);
                 m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Run"), plRunElements);
+
+                stream.Close();
+                stream.Dispose();
+                objExcel.Save();
+                objExcel.Dispose();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("{0} Exception: ", e);
+            }
+        }
+
+        public void GetExcelElements()
+        {
+            try
+            {
+                FileStream stream = new FileStream(@"E:\" + m_strWorkbookName + ".xlsx", FileMode.Open); //creates a file stream to the file we want to manipulate
+                ExcelPackage objExcel = new ExcelPackage();
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                objExcel.Load(stream);
+                ExcelWorksheet worksheet = objExcel.Workbook.Worksheets[m_strWorksheetName];
+
+                m_leeExcelObject.GetWorksheetHeader(worksheet, m_plHeaderNames);
+                m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(m_plHeaderNames, "Input Parameter"), m_plSearchTerms);
+                m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(m_plHeaderNames, "Number of results to save"), m_plNumberOfResultsToSave);
+                m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(m_plHeaderNames, "Run"), m_plRunElements);
 
                 stream.Close();
                 stream.Dispose();

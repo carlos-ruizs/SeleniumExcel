@@ -21,7 +21,7 @@ namespace PruebaExcel_EPplus
         public ExcelPackage m_objExcel; //the Excel app itself
         public ExcelWorkbook m_objWorkbook; //A workbook object we will be using constantly
         public ExcelWorksheet m_objWorksheet; //A worksheet object because we need to create at least one worksheet
-        private string m_strFileName; //the name of the file we are using, this is used for Workbooks as those are the files themselves
+        public string m_strFileName; //the name of the file we are using, this is used for Workbooks as those are the files themselves
         public FileInfo m_fileInfo; //the path of the directory where we want to save the file
         private string m_strFontName; //the name of the font we want to use
         private int m_intFontSize; //the size of the font we want to use
@@ -416,6 +416,16 @@ namespace PruebaExcel_EPplus
             Console.ReadKey();
             Console.Clear();
             */
+        }
+
+        public string GetWorksheetName(ExcelPackage pepExcelObject, int pintWorksheetIndex)
+        {
+            return pepExcelObject.Workbook.Worksheets[pintWorksheetIndex].ToString();
+        }
+
+        public int GetWorksheetAmount(ExcelPackage pepExcelObject)
+        {
+            return pepExcelObject.Workbook.Worksheets.Count;
         }
 
         /// <summary>
