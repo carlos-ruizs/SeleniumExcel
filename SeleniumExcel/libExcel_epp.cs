@@ -423,9 +423,40 @@ namespace PruebaExcel_EPplus
             return pepExcelObject.Workbook.Worksheets[pintWorksheetIndex].ToString();
         }
 
+        public string GetWorksheetName(FileInfo pfiExcelPath, int pintWorksheetIndex)
+        {
+            using(ExcelPackage excelPackage = new ExcelPackage(pfiExcelPath))
+            {
+                return excelPackage.Workbook.Worksheets[pintWorksheetIndex].ToString();
+            }
+        }
+
+        public string FirstWorksheetName(FileInfo pfiExcelPath)
+        {
+            using(ExcelPackage excelPackage = new ExcelPackage(pfiExcelPath))
+            {
+                return excelPackage.Workbook.Worksheets[1].ToString();
+            }
+        }
+
         public int GetWorksheetAmount(ExcelPackage pepExcelObject)
         {
             return pepExcelObject.Workbook.Worksheets.Count;
+        }
+
+        public int GetWorksheetAmount(FileInfo pfiExcelPath)
+        {
+            using (ExcelPackage excelPackage = new ExcelPackage(pfiExcelPath))
+            {
+                return excelPackage.Workbook.Worksheets.Count;
+            }
+        }
+
+        public string GetWorkbookName(FileInfo pfiExcelPath)
+        {
+            string sub1 = pfiExcelPath.Name;
+            string sub2 = sub1.Substring(0, sub1.Length - 5);
+            return sub2;
         }
 
         /// <summary>

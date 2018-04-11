@@ -30,10 +30,14 @@ namespace SeleniumExcel
                 IWebDriver driverFF = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
                 LibExcel_epp objeto_Excel = new LibExcel_epp();
                 Support objeto_Support = new Support("WorkbookSelenium", "Sheet1", driverFF, objeto_Excel);
-                objeto_Excel.m_strFileName = "WorkbookSelenium";
-                objeto_Excel.m_fileInfo = excelFile;
-                objeto_Support.GetExcelElements();
+                //Support objeto_Support = new Support(excelFile);
+                //objeto_Support.m_iwbWebDriver = driverFF;
 
+                Console.WriteLine("The name of the workbook we are using is " + objeto_Support.m_strWorkbookName);
+                Console.WriteLine("Tiene [{0}] worksheets", objeto_Excel.GetWorksheetAmount(objeto_Support.m_fiFilePath));
+                Console.WriteLine("La Worksheet dentro del archivo se llama: " + objeto_Excel.GetWorksheetName(objeto_Support.m_fiFilePath,1));
+                Console.ReadKey();
+                
                 foreach (string value in objeto_Support.m_plRunElements)
                 {
                     Console.WriteLine(value);
@@ -57,15 +61,6 @@ namespace SeleniumExcel
                 foreach(int val in RunCases)
                 {
                     Console.WriteLine(val);
-                }
-
-                Console.ReadKey();
-
-                //This gives me the name of a worksheet in a certain place in the file I want
-                using(ExcelPackage excelPackage = new ExcelPackage(excelFile))
-                {
-                    Console.WriteLine("There are [{0}] worksheets in the file", objeto_Excel.GetWorksheetAmount(excelPackage));
-                    Console.WriteLine(objeto_Excel.GetWorksheetName(excelPackage,1));
                 }
 
                 Console.ReadKey();
