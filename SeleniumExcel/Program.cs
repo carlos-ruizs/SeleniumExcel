@@ -14,9 +14,6 @@ using System.IO;
 namespace SeleniumExcel
 {
     //TODO change this class so that we obtain which scenarios we will be executing before calling our methods and objects
-    //TODO Add a for loop to make the program last for however long we want
-    //TODO Add a case to iterate through every scenario available
-    //TODO change this class to allow us to call every method at our disposition
     class Program
     {
         static void Main(string[] args)
@@ -30,42 +27,50 @@ namespace SeleniumExcel
                 IWebDriver driverFF = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
                 LibExcel_epp objeto_Excel = new LibExcel_epp();
                 Support objeto_Support = new Support("WorkbookSelenium", "Sheet1", driverFF, objeto_Excel);
-                //Support objeto_Support = new Support(excelFile);
-                //objeto_Support.m_iwbWebDriver = driverFF;
+                objeto_Excel.m_strFileName = "WorkbookSelenium";
+                objeto_Excel.m_fileInfo = excelFile;
+                objeto_Support.GetExcelElements();
 
-                Console.WriteLine("The name of the workbook we are using is " + objeto_Support.m_strWorkbookName);
-                Console.WriteLine("Tiene [{0}] worksheets", objeto_Excel.GetWorksheetAmount(objeto_Support.m_fiFilePath));
-                Console.WriteLine("La Worksheet dentro del archivo se llama: " + objeto_Excel.GetWorksheetName(objeto_Support.m_fiFilePath,1));
-                Console.ReadKey();
-                
-                foreach (string value in objeto_Support.m_plRunElements)
-                {
-                    Console.WriteLine(value);
-                }
-
+                //This for-loop iterates through every element in the worksheet that has a number of results to save
+                //TODO change "objeto_Support.m_plNumberOfResultsToSave.Count - 1" to something that better reflects how many actions we'll be checking 
                 for (int listIndex = 0; listIndex <= objeto_Support.m_plNumberOfResultsToSave.Count - 1; listIndex++)
                 {
+                    //This if-else checks if there's a 0 or a blank space to avoid executing that element
                     if (objeto_Support.m_plRunElements[listIndex] == " ")
                     {
-                        RunCases.Add(0);
+                        continue;
                     }
                     else
                     {
-                        int element = int.Parse(objeto_Support.m_plRunElements[listIndex]);
-                        RunCases.Add(element);
+                        if (objeto_Support.m_plRunElements[listIndex] == "0")
+                        {
+                            continue;
+                        }
+                        //int element = int.Parse(objeto_Support.m_plRunElements[listIndex]);
+                        //RunCases.Add(element);
+                    }
+
+                    //converts every element in the Actions column of the worksheet, so we can later check if an action in the column is valid or not
+                    objeto_Support.m_plActions = objeto_Support.m_plActions.ConvertAll(d => d.ToUpper());
+
+                    //This switch checks which actions are to be executed for the elements in the worksheet
+                    switch (objeto_Support.m_plActions[listIndex])
+                    {
+                        case "SEARCH":
+                            objeto_Support.SearchGoogle(listIndex);
+
+                            break;
+                        case "CREATE":
+                            Console.WriteLine("You already created a .xlsx file");
+                            break;
+
+                        default:
+                            Console.WriteLine("The case " + objeto_Support.m_plActions[listIndex] + " doesn't exist");
+                            break;
                     }
                 }
 
-                Console.WriteLine();
-
-                foreach(int val in RunCases)
-                {
-                    Console.WriteLine(val);
-                }
-
-                Console.ReadKey();
-
-                objeto_Support.SearchGoogle();
+                objeto_Support.m_iwbWebDriver.Close();
             }
             else
             {

@@ -23,8 +23,11 @@ namespace SeleniumExcel
         public List<string> m_plSearchTerms; //list of search strings in the Excel file
         public List<string> m_plNumberOfResultsToSave; //integers that we use to know how many results we will save inside the worksheet
         public List<string> m_plRunElements; //column that tells us if a search string is to be executed or not
+
         public List<string> m_plWorksheetNames;
         public FileInfo m_fiFilePath;
+        public List<string> m_plActions; //Column that tells us what method is going to process
+        public int m_listIndex;
 
         //Properties
         public string ProprWorkbookName {get => m_strWorkbookName; set => m_strWorkbookName = value;}
@@ -50,7 +53,9 @@ namespace SeleniumExcel
             m_plSearchTerms = new List<string>();
             m_plNumberOfResultsToSave = new List<string>();
             m_plRunElements = new List<string>();
+            m_plActions = new List<string>();
             m_fiFilePath = new FileInfo(@"E:\" + m_strWorkbookName + ".xlsx");
+
         }
 
         public Support(FileInfo pfiExcelPath)
@@ -82,14 +87,11 @@ namespace SeleniumExcel
             piwbDriver.Close();
         }
 
-        public void SearchGoogle()
+        public void SearchGoogle(int Index)
         {
-            m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
+            Results(m_plHeaderNames, m_plSearchTerms, m_plNumberOfResultsToSave, m_plRunElements, Index);
 
-            GetExcelElements(m_plHeaderNames, m_plSearchTerms, m_plNumberOfResultsToSave, m_plRunElements);
-            Results(m_plHeaderNames, m_plSearchTerms, m_plNumberOfResultsToSave, m_plRunElements);
-
-            m_iwbWebDriver.Close();
+            //m_iwbWebDriver.Close();
         }
 
         /// <summary>
@@ -104,69 +106,46 @@ namespace SeleniumExcel
         /// <param name="plSearchStrings"></param>
         /// <param name="plResultNumbers"></param>
         /// <param name="pstrSearchString"></param>
-        public void Results(List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements)
+        public void Results(List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements, int listIndex)
         {
-            //This cycle will be used to determine the amount of results to search
-            for (int listIndex = 0; listIndex <= plResultNumbers.Count - 1; listIndex++)
+
+            if (listIndex == 0)
             {
-                //TODO get this if-else out of here, and into the main Program.cs file but with the same logic
-                string RunV = plRunElements[listIndex];
-
-                if (RunV == " ")
-
-                {
-
-                    continue;
-
-                }
-
-                else
-
-                {
-
-                    if (RunV == "0")
-
-                    {
-
-                        continue;
-
-                    }
-
-                }
-
-                int elementsToSave = int.Parse(plResultNumbers[listIndex]); //converts the strings inside the resultsToSave list into integers we will use to determine how many results we will save for that particular search
-                m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(plSearchStrings[listIndex]); //finds the search bar and sends the string we want to search into it
-                    
-                /*
-                Checks if it's the first time it's searching on Google 
-                If true, it looks for the btnK button and clicks it
-                If false, it looks for the btnG button and clicks it
-                The button changes names depending where you are. 
-                */
-                if (listIndex == 0)
-                {
-                    m_iwbWebDriver.FindElement(By.Name("btnK")).Click();
-                }
-                else
-                {
-                    m_iwbWebDriver.FindElement(By.Name("btnG")).Click();
-                }
-
-                IList<IWebElement> h3Links = m_iwbWebDriver.FindElements(By.ClassName("g")); //saves all the links inside the webpage from the "g" class into an IList
-                string totalSearchResults = m_iwbWebDriver.FindElement(By.Id("resultStats")).Text; //gets the total amount of results for that particular search
-                IList<IWebElement> relatedResults = m_iwbWebDriver.FindElements(By.ClassName("nVcaUb")); //saves the links for all the related searches results into an IList
-
-
-                //Sends the data we want to save into the worksheet for the corresponding column 
-                //Also gets the lists from before and builds a big string with all the results that were saved in both their hyperlink and text forms
-                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Saved Results Links"), GetResultsHref(h3Links, elementsToSave - 1));
-                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Saved Results Text"), GetResultsTxt(h3Links, elementsToSave - 1));//debe tomar el nombre de la columna donde lo va a poner y el de la fila igual (el término de búsqueda)
-                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Related Results Links"), GetResultsHref(relatedResults, relatedResults.Count - 1));
-                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Related Results Text"), GetResultsTxt(relatedResults, relatedResults.Count - 1));
-                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Total number of results"), GetTotalSearchResults(totalSearchResults));
-
-                m_iwbWebDriver.FindElement(By.Id("lst-ib")).Clear(); //clears the search field when we finish with a search
+                m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
             }
+
+            int elementsToSave = int.Parse(plResultNumbers[listIndex]); //converts the strings inside the resultsToSave list into integers we will use to determine how many results we will save for that particular search
+            m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(plSearchStrings[listIndex]); //finds the search bar and sends the string we want to search into it
+
+            /*
+            Checks if it's the first time it's searching on Google 
+            If true, it looks for the btnK button and clicks it
+            If false, it looks for the btnG button and clicks it
+            The button changes names depending where you are. 
+            */
+            if (listIndex == 0)
+            {
+                m_iwbWebDriver.FindElement(By.Name("btnK")).Click();
+            }
+            else
+            {
+                m_iwbWebDriver.FindElement(By.Name("btnG")).Click();
+            }
+
+            IList<IWebElement> h3Links = m_iwbWebDriver.FindElements(By.ClassName("g")); //saves all the links inside the webpage from the "g" class into an IList
+            string totalSearchResults = m_iwbWebDriver.FindElement(By.Id("resultStats")).Text; //gets the total amount of results for that particular search
+            IList<IWebElement> relatedResults = m_iwbWebDriver.FindElements(By.ClassName("nVcaUb")); //saves the links for all the related searches results into an IList
+
+
+            //Sends the data we want to save into the worksheet for the corresponding column 
+            //Also gets the lists from before and builds a big string with all the results that were saved in both their hyperlink and text forms
+            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Saved Results Links"), GetResultsHref(h3Links, elementsToSave - 1));
+            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Saved Results Text"), GetResultsTxt(h3Links, elementsToSave - 1));//debe tomar el nombre de la columna donde lo va a poner y el de la fila igual (el término de búsqueda)
+            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Related Results Links"), GetResultsHref(relatedResults, relatedResults.Count - 1));
+            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Related Results Text"), GetResultsTxt(relatedResults, relatedResults.Count - 1));
+            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, listIndex + 2, GetColumnIndex(plHeaderNames, "Total number of results"), GetTotalSearchResults(totalSearchResults));
+
+            m_iwbWebDriver.FindElement(By.Id("lst-ib")).Clear(); //clears the search field when we finish with a search
         }
 
 
@@ -181,7 +160,7 @@ namespace SeleniumExcel
         /// <param name="plHeaderNames"></param>
         /// <param name="plSearchStrings"></param>
         /// <param name="plResultNumbers"></param>
-        public void GetExcelElements(List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements)
+        public void GetExcelElements(List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements, List<string> plActions)
         {
             try
             {
@@ -195,6 +174,7 @@ namespace SeleniumExcel
                 m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Input Parameter"), plSearchStrings);
                 m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Number of results to save"), plResultNumbers);
                 m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Run"), plRunElements);
+                m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(plHeaderNames, "Actions"), plActions);
 
                 stream.Close();
                 stream.Dispose();
