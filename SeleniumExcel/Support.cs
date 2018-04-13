@@ -23,7 +23,6 @@ namespace SeleniumExcel
         public List<string> m_plSearchTerms; //list of search strings in the Excel file
         public List<string> m_plNumberOfResultsToSave; //integers that we use to know how many results we will save inside the worksheet
         public List<string> m_plRunElements; //column that tells us if a search string is to be executed or not
-
         public List<string> m_plWorksheetNames;
         public FileInfo m_fiFilePath;
         public List<string> m_plActions; //Column that tells us what method is going to process
@@ -199,6 +198,7 @@ namespace SeleniumExcel
                     m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(m_plHeaderNames, "Input Parameter"), m_plSearchTerms);
                     m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(m_plHeaderNames, "Number of results to save"), m_plNumberOfResultsToSave);
                     m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(m_plHeaderNames, "Run"), m_plRunElements);
+                    m_leeExcelObject.IterateByColumn(worksheet, GetColumnIndex(m_plHeaderNames, "Actions"), m_plActions);
                 }
             }
             catch (Exception e)
