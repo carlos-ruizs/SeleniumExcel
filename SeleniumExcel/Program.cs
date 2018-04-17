@@ -27,10 +27,11 @@ namespace SeleniumExcel
                 IWebDriver driverFF = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
                 LibExcel_epp objeto_Excel = new LibExcel_epp();
                 Support objeto_Support = new Support("WorkbookSelenium", "Sheet1", driverFF, objeto_Excel);
-                objeto_Excel.m_strFileName = "WorkbookSelenium";
-                objeto_Excel.m_fileInfo = excelFile;
-                objeto_Support.GetExcelElements();
 
+                //objeto_Excel.m_strFileName = "WorkbookSelenium";
+                //objeto_Excel.m_fileInfo = excelFile;
+                objeto_Support.GetExcelElements();
+ 
                 //This for-loop iterates through every element in the worksheet that has a number of results to save
                 //TODO change "objeto_Support.m_plNumberOfResultsToSave.Count - 1" to something that better reflects how many actions we'll be checking 
                 for (int listIndex = 0; listIndex <= objeto_Support.m_plNumberOfResultsToSave.Count - 1; listIndex++)
@@ -46,8 +47,6 @@ namespace SeleniumExcel
                         {
                             continue;
                         }
-                        //int element = int.Parse(objeto_Support.m_plRunElements[listIndex]);
-                        //RunCases.Add(element);
                     }
 
                     //converts every element in the Actions column of the worksheet, so we can later check if an action in the column is valid or not
@@ -64,12 +63,42 @@ namespace SeleniumExcel
                             Console.WriteLine("You already created a .xlsx file");
                             break;
 
+                        case "LOGIN":
+                            Console.WriteLine("I'm gonna check if the sheet where the values are stored exists");
+                            if (objeto_Support.m_plWorksheetNames.Contains("Login"))
+                            {
+                                using(ExcelPackage excelPackage = new ExcelPackage(objeto_Support.m_fiFilePath))
+                                {
+                                    ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets["Login"];
+
+                                    for (int rowIndex = worksheet.Dimension.Start.Row; rowIndex <= worksheet.Dimension.End.Row; rowIndex++)
+                                    {
+                                        for (int colIndex = worksheet.Dimension.Start.Column; colIndex <= worksheet.Dimension.End.Column; colIndex++)
+                                        {
+                                            if (worksheet.Cells[rowIndex, colIndex].Value != null) //if the value in a specific cell isn't null, then
+                                            {
+                                                string columnName = worksheet.Cells[rowIndex, colIndex].Value.ToString(); //gets the value in a cell and transformrs it into a string
+
+                                                Console.Write(columnName + " ");
+                                            }
+                                        }
+                                    }
+                                }
+                                Console.ReadKey();
+                            }
+                            else
+                            {
+                                Console.WriteLine("The worksheet doesn't exist");
+                            }
+
+                            break;
+
                         default:
                             Console.WriteLine("The case " + objeto_Support.m_plActions[listIndex] + " doesn't exist");
                             break;
                     }
                 }
-
+                
                 objeto_Support.m_iwbWebDriver.Close();
             }
             else

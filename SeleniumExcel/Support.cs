@@ -23,7 +23,7 @@ namespace SeleniumExcel
         public List<string> m_plSearchTerms; //list of search strings in the Excel file
         public List<string> m_plNumberOfResultsToSave; //integers that we use to know how many results we will save inside the worksheet
         public List<string> m_plRunElements; //column that tells us if a search string is to be executed or not
-        public List<string> m_plWorksheetNames;
+        public List<string> m_plWorksheetNames; //names of all the worksheets in the file we're working with
         public FileInfo m_fiFilePath;
         public List<string> m_plActions; //Column that tells us what method is going to process
         public int m_listIndex;
@@ -54,7 +54,11 @@ namespace SeleniumExcel
             m_plRunElements = new List<string>();
             m_plActions = new List<string>();
             m_fiFilePath = new FileInfo(@"E:\" + m_strWorkbookName + ".xlsx");
-
+            m_plWorksheetNames = new List<string>();
+            for (int worksheetsNumber = 1; worksheetsNumber <= m_leeExcelObject.GetWorksheetAmount(m_fiFilePath); worksheetsNumber++) //this has to start at 1, otherwise it will give an exception
+            {
+                m_plWorksheetNames.Add(m_leeExcelObject.GetWorksheetNameFI(m_fiFilePath,worksheetsNumber));
+            }
         }
 
         public Support(FileInfo pfiExcelPath)
@@ -67,6 +71,11 @@ namespace SeleniumExcel
             m_leeExcelObject = new LibExcel_epp();
             m_strWorkbookName = m_leeExcelObject.GetWorkbookName(m_fiFilePath);
             m_strWorksheetName = m_leeExcelObject.FirstWorksheetName(m_fiFilePath);
+            m_plWorksheetNames = new List<string>();
+            for (int worksheetsNumber = 1; worksheetsNumber <= m_leeExcelObject.GetWorksheetAmount(m_fiFilePath); worksheetsNumber++) //this has to start at 1, otherwise it will give an exception
+            {
+                m_plWorksheetNames.Add(m_leeExcelObject.GetWorksheetNameFI(m_fiFilePath, worksheetsNumber));
+            }
         }
 
         //TODO cambiar la manera en la que mete las cosas al Excel para que sea en base al título de la columna y no estático

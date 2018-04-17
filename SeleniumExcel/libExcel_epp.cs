@@ -141,6 +141,16 @@ namespace PruebaExcel_EPplus
             m_objExcel.Save();
         }
 
+        public void WorksheetCreate(FileInfo pfiExcelPath, string pstrWorksheetName)
+        {
+            using (ExcelPackage excelPackage = new ExcelPackage(pfiExcelPath))
+            {
+                ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.Add(pstrWorksheetName);
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                excelPackage.SaveAs(pfiExcelPath);
+            }
+        }
+
         //This will be here for now 
         public void OverwriteExcel(string pstrFileName)
         {
@@ -418,12 +428,12 @@ namespace PruebaExcel_EPplus
             */
         }
 
-        public string GetWorksheetName(ExcelPackage pepExcelObject, int pintWorksheetIndex)
+        public string GetWorksheetNameEP(ExcelPackage pepExcelObject, int pintWorksheetIndex)
         {
             return pepExcelObject.Workbook.Worksheets[pintWorksheetIndex].ToString();
         }
 
-        public string GetWorksheetName(FileInfo pfiExcelPath, int pintWorksheetIndex)
+        public string GetWorksheetNameFI(FileInfo pfiExcelPath, int pintWorksheetIndex)
         {
             using(ExcelPackage excelPackage = new ExcelPackage(pfiExcelPath))
             {
