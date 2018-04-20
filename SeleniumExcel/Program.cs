@@ -33,7 +33,8 @@ namespace SeleniumExcel
                 objeto_Support.GetExcelElements();
  
                 //This for-loop iterates through every element in the worksheet that has a number of results to save
-                //TODO change "objeto_Support.m_plNumberOfResultsToSave.Count - 1" to something that better reflects how many actions we'll be checking 
+                //TODO change "objeto_Support.m_plNumberOfResultsToSave.Count - 1" to something that better reflects how many actions we'll be checking
+                //TODO Change this for loop so that it "knows" that even if the first element inside the sheet had a 0 in it's Run column, it's still the first element of the list to search so it should use the first search options
                 for (int listIndex = 0; listIndex <= objeto_Support.m_plNumberOfResultsToSave.Count - 1; listIndex++)
                 {
                     //This if-else checks if there's a 0 or a blank space to avoid executing that element

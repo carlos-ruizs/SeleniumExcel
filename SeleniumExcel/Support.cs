@@ -78,9 +78,6 @@ namespace SeleniumExcel
             }
         }
 
-        //TODO cambiar la manera en la que mete las cosas al Excel para que sea en base al título de la columna y no estático
-        //TODO intentar hacerlo todo menos estático
-        //TODO poner un método para revisar si existe un archivo de Excel y controlar qué pasa si hay o no hay
         public void SearchGoogle(IWebDriver piwbDriver, LibExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName)
         {
             piwbDriver.Navigate().GoToUrl("http://www.google.com/");
@@ -101,7 +98,7 @@ namespace SeleniumExcel
 
             //m_iwbWebDriver.Close();
         }
-
+        //TODO Change this too so that it complements what the outer for-loop in Program.cs when it comes to elements that have a 1 or 0 in it's Run column
         /// <summary>
         /// Enters a for loop that iterates through all the search strings we want to use, 
         /// as well as the number of saved results we want in the worksheet
@@ -116,22 +113,18 @@ namespace SeleniumExcel
         /// <param name="pstrSearchString"></param>
         public void Results(List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements, int listIndex)
         {
-
-            if (listIndex == 0)
-            {
-                m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
-            }
-
+            IfNIteration(listIndex, plRunElements, plHeaderNames);
+            
             int elementsToSave = int.Parse(plResultNumbers[listIndex]); //converts the strings inside the resultsToSave list into integers we will use to determine how many results we will save for that particular search
             m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(plSearchStrings[listIndex]); //finds the search bar and sends the string we want to search into it
-
+            
             /*
             Checks if it's the first time it's searching on Google 
             If true, it looks for the btnK button and clicks it
             If false, it looks for the btnG button and clicks it
             The button changes names depending where you are. 
             */
-            if (listIndex == 0)
+            if (m_iwbWebDriver.Url == "https://www.google.com/?gws_rd=ssl" || m_iwbWebDriver.Url == "https://www.google.com/")
             {
                 m_iwbWebDriver.FindElement(By.Name("btnK")).Click();
             }
@@ -156,6 +149,43 @@ namespace SeleniumExcel
             m_iwbWebDriver.FindElement(By.Id("lst-ib")).Clear(); //clears the search field when we finish with a search
         }
 
+        /// <summary>
+        /// This checks if it's the first iteration for the Search action and if the Run column associated to it has a 1, 0 or null value
+        /// If it's a 1, then it simply goes to google.com
+        /// If it's in any other iteration, it checks if the value in the Run column for the string before it was 0 or null so it knows
+        /// it's going to google.com for the "first" time since it is the first string it will search.
+        /// Right now it works only if the Search actions are the first things inside the worksheet
+        /// </summary>
+        /// <param name="pintIterationNumber"></param>
+        /// <param name="plRunElements"></param>
+        /// <param name="plHeaderNames"></param>
+        //TODO Change this in the future so that it knows it's the first iteration of the "Search" action no matter where in the worksheet it's found
+        private void IfNIteration(int pintIterationNumber, List<string> plRunElements, List<string> plHeaderNames)
+        {
+            if (pintIterationNumber == 0 && plRunElements[pintIterationNumber] == "1")
+            {
+                m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
+            }
+            else
+            {
+                if (pintIterationNumber > 0 && (plRunElements[pintIterationNumber - 1] == " " || plRunElements[pintIterationNumber - 1] == "0"))
+                {
+                    //Quiero ver cuál fue el último elemento que tuvo un uno para ubicar su índice
+                    for (int i = pintIterationNumber - 1; i >= 0; i--)
+                    {
+                        if (plRunElements[i] == "1") //If there was at least one element before the current one that executed
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Fills some lists we created so we can use them to know how many search results we will
