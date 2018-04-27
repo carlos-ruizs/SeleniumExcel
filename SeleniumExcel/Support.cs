@@ -188,6 +188,159 @@ namespace SeleniumExcel
         }
 
         /// <summary>
+        /// Function that gets parameters like username and password in order to validate what kind of results
+        /// do we have by login in.
+        /// </summary>
+        /// <param name="URL"></param>
+        /// <param name="plHeaderNames"></param>
+        public void Login(string URL, int RowIndex)
+        {
+            string ResultsLogin, Validations = null;
+
+            m_iwbWebDriver.FindElement(By.CssSelector("body")).SendKeys(Keys.Control + "t");
+            m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com");
+
+            //m_iwbWebDriver.Navigate().GoToUrl(URL);3
+            //GetRowIndex(m_plActions, "Login");
+            using (ExcelPackage excel = new ExcelPackage(m_fiFilePath))
+            {
+                ExcelWorksheet worksheet = excel.Workbook.Worksheets["Sheet1"];
+                //string user1 = m_leeExcelObject.IterateByColumnName(worksheet, RowIndex, m_plHeaderNames, "Username");
+                //string pass1 = m_leeExcelObject.IterateByColumnName(worksheet, RowIndex, m_plHeaderNames, "Password");
+
+                string user = m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Username");
+                string pass = m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Password");
+                m_iwbWebDriver.FindElement(By.Id("txtUsername")).SendKeys(user);
+                m_iwbWebDriver.FindElement(By.Id("txtPassword")).SendKeys(pass);
+                m_iwbWebDriver.FindElement(By.Id("btnLogin")).Click();
+
+                if (m_iwbWebDriver.Url == "http://opensource.demo.orangehrmlive.com/index.php/dashboard")
+                {
+                    ResultsLogin = "Succesful Login";
+
+                    switch (m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Test Case"))
+                    {
+                        case "1":
+                        case "2":
+                        case "3":
+                            break;
+
+                        case "4":
+                            IList<IWebElement> bMenus = m_iwbWebDriver.FindElements(By.ClassName("firstLevelMenu"));
+                            //Also check this for, it should be getting the elements but it doesn't
+                            //This for is supposed to do the same as we did with the result links but with the elements in the page
+                            for (int i = 0; i < bMenus.Count; i++)
+                            {
+                                string validatemenus = bMenus[i].FindElement(By.TagName("b")).Text;
+                                Validations = Validations + validatemenus + " Exists" + ", ";
+                                Console.WriteLine(Validations);
+                            }
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), Validations);
+
+                            break;
+                        case "5":
+                            //Test case 5
+                            //Validate the buttons, elements, and graphics in the screen
+                            m_iwbWebDriver.FindElement(By.Id("menu_dashboard_index")).Click(); //Click the dashboard menu
+                            string resultString = null;
+                            //Validation of quick launch buttons
+                            IList<IWebElement> quickLaunchButtons = m_iwbWebDriver.FindElements(By.XPath("//*[@class='quickLinkText']"));
+                            for (int i = 0; i < quickLaunchButtons.Count; i++)
+                            {
+                                string buttons = quickLaunchButtons[i].Text;//FindElement(By.XPath("//*[@class='quickLinkText']")).Text;
+                                if (i != quickLaunchButtons.Count - 1)
+                                {
+                                    resultString = resultString + buttons + ", ";
+                                }
+                                else
+                                {
+                                    resultString = resultString + buttons + " ";
+                                }
+                            }
+
+                            Console.WriteLine(resultString);
+                            resultString = null;
+                            /*
+                            //Validation of the graph legends
+                            IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendLabel']"));
+                            for (int i = 0; i < graphLegend.Count; i++)
+                            {
+                                string legends = graphLegend[i].Text;
+                                if (i != graphLegend.Count - 1)
+                                {
+                                    resultString = resultString + legends + ", ";
+                                }
+                                else
+                                {
+                                    resultString = resultString + legends + " ";
+                                }
+                            }
+
+                            Console.WriteLine(resultString);
+                            */
+                            /*
+                            //Validation of graph colors in the legends
+                            IList<IWebElement> graphColor = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendColorBox']"));
+                            for (int i = 0; i < graphColor.Count; i++)
+                            { 
+                                if (graphColor[i].Displayed)
+                                {
+                                    resultString = "The color label exists for legend number " + i + ", ";
+                                }
+                                else
+                                {
+                                    resultString = "The color label exists for legend number " + i + " ";
+                                }
+                            }
+
+                            Console.WriteLine(resultString);
+                            resultString = null;
+                            */
+
+                            /*
+                            IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.ClassName(""));//el ID que está aquí es el del espacio donde están las leyendas
+
+                            for (int i = 0; i < graphLegend.Count; i++)
+                            {
+                                if (graphLegend[i].FindElement(By.ClassName("legendColorBox")).Enabled)
+                                {
+                                    Console.WriteLine("The color is displayed for the legend is displayed");
+                                }
+                                if (graphLegend[i].FindElement(By.ClassName("legendLabel")).Enabled)
+                                {
+                                    Console.WriteLine("The label for the legend is displayed");
+                                }
+                                string validatemenus = graphLegend[i].FindElement(By.ClassName("legendLabel")).Text;
+                                Validations = Validations + validatemenus + " Exists" + ", ";
+                            }
+                            */
+                            Console.WriteLine(Validations);
+                            break;
+                        case "6":
+
+                            break;
+                        case "7":
+
+                            break;
+
+                        default:
+                            Console.WriteLine("The test case doesn't exist");
+                            break;
+                    }
+                    m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com/index.php/auth/logout");//Logout after each test case
+                }
+                else
+                {
+                    ResultsLogin = m_iwbWebDriver.FindElement(By.Id("spanMessage")).Text;
+                }
+
+                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Results Login"), ResultsLogin);
+
+            }
+
+        }
+
+        /// <summary>
         /// Fills some lists we created so we can use them to know how many search results we will
         /// save, what strings we will be searching for and the amount of searches in general we
         /// wil be doing

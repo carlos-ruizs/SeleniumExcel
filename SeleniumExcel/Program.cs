@@ -71,21 +71,17 @@ namespace SeleniumExcel
                                 using(ExcelPackage excelPackage = new ExcelPackage(objeto_Support.m_fiFilePath))
                                 {
                                     ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets["Login"];
-
-                                    for (int rowIndex = worksheet.Dimension.Start.Row; rowIndex <= worksheet.Dimension.End.Row; rowIndex++)
+                                    if (objeto_Excel.FindElement("WorkbookSelenium", "Sheet1", listIndex + 2, "Username") == null || objeto_Excel.FindElement("WorkbookSelenium", "Sheet1", listIndex + 2, "Password") == null)
                                     {
-                                        for (int colIndex = worksheet.Dimension.Start.Column; colIndex <= worksheet.Dimension.End.Column; colIndex++)
-                                        {
-                                            if (worksheet.Cells[rowIndex, colIndex].Value != null) //if the value in a specific cell isn't null, then
-                                            {
-                                                string columnName = worksheet.Cells[rowIndex, colIndex].Value.ToString(); //gets the value in a cell and transformrs it into a string
-
-                                                Console.Write(columnName + " ");
-                                            }
-                                        }
+                                        Console.WriteLine("Fields Username or Password are null or empty");
+                                        Console.WriteLine("Row without Username or Password: " + listIndex + 2);
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        objeto_Support.Login("opensource.demo.orangehrmlive.com", listIndex);
                                     }
                                 }
-                                Console.ReadKey();
                             }
                             else
                             {
