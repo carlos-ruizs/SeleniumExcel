@@ -259,7 +259,8 @@ namespace SeleniumExcel
                             }
 
                             Console.WriteLine(resultString);
-                            resultString = null;
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName,m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString);
+
                             /*
                             //Validation of the graph legends
                             IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendLabel']"));
@@ -277,7 +278,9 @@ namespace SeleniumExcel
                             }
 
                             Console.WriteLine(resultString);
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString);
                             */
+
                             /*
                             //Validation of graph colors in the legends
                             IList<IWebElement> graphColor = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendColorBox']"));
