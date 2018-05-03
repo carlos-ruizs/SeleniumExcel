@@ -245,41 +245,56 @@ namespace SeleniumExcel
                             string resultString = null;
                             //Validation of quick launch buttons
                             IList<IWebElement> quickLaunchButtons = m_iwbWebDriver.FindElements(By.XPath("//*[@class='quickLinkText']"));
-                            for (int i = 0; i < quickLaunchButtons.Count; i++)
-                            {
-                                string buttons = quickLaunchButtons[i].Text;//FindElement(By.XPath("//*[@class='quickLinkText']")).Text;
-                                if (i != quickLaunchButtons.Count - 1)
-                                {
-                                    resultString = resultString + buttons + ", ";
-                                }
-                                else
-                                {
-                                    resultString = resultString + buttons + " ";
-                                }
-                            }
-
-                            Console.WriteLine(resultString);
-                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName,m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString);
-
-                            /*
-                            //Validation of the graph legends
                             IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendLabel']"));
-                            for (int i = 0; i < graphLegend.Count; i++)
+                            IList<IWebElement> pieLabel = m_iwbWebDriver.FindElements(By.XPath("//*[@class='pieLabel']"));
+                            /*
+                            IWebElement graphic = m_iwbWebDriver.FindElement(By.XPath("//*[@class='flot-base']"));
+                            if (graphic.Displayed)
                             {
-                                string legends = graphLegend[i].Text;
-                                if (i != graphLegend.Count - 1)
-                                {
-                                    resultString = resultString + legends + ", ";
-                                }
-                                else
-                                {
-                                    resultString = resultString + legends + " ";
-                                }
+                                string graphDisplay = "The graphic is displayed";
                             }
+                            */
+                            //for (int i = 0; i < quickLaunchButtons.Count; i++)
+                            //{
+                            //    string buttons = quickLaunchButtons[i].Text;//FindElement(By.XPath("//*[@class='quickLinkText']")).Text;
+                            //    if (i != quickLaunchButtons.Count - 1)
+                            //    {
+                            //        resultString = resultString + buttons + ", ";
+                            //    }
+                            //    else
+                            //    {
+                            //        resultString = resultString + buttons + " ";
+                            //    }
+                            //}
+
+                            resultString = GetWebElements(quickLaunchButtons,quickLaunchButtons.Count);
 
                             Console.WriteLine(resultString);
-                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString);
-                            */
+                           
+                            string labels = null;
+                            //Validation of the graph legends
+                            
+                            //for (int i = 0; i < graphLegend.Count; i++)
+                            //{
+                            //    Console.WriteLine(i);
+                            //    //string legends = graphLegend[i].FindElement(By.XPath("//*[@class='legendLabel']")).GetAttribute("text");
+                            //    string legends = graphLegend[i].Text;
+                            //    if (i != graphLegend.Count - 1)
+                            //    {
+                            //        labels = labels + legends + ", ";
+                            //    }
+                            //    else
+                            //    {
+                            //        labels = labels + legends + " ";
+                            //    }
+                            //}
+                            labels = GetWebElements(graphLegend,graphLegend.Count);
+                            Console.WriteLine(labels);
+                            string percents = null;
+                            percents = GetWebElements(pieLabel,pieLabel.Count);
+                            Console.WriteLine(percents);
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString + labels);
+                            //m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), labels);
 
                             /*
                             //Validation of graph colors in the legends
@@ -317,7 +332,6 @@ namespace SeleniumExcel
                                 Validations = Validations + validatemenus + " Exists" + ", ";
                             }
                             */
-                            Console.WriteLine(Validations);
                             break;
                         case "6":
 
@@ -494,6 +508,25 @@ namespace SeleniumExcel
             string sub2 = sub.Substring(0, sub.Length - 28);
 
             return sub2;
+        }
+
+        public string GetWebElements(IList<IWebElement> pilWebElements, int pintLimit)
+        {
+            string ResultString = null;
+            for (int i = 0; i < pilWebElements.Count; i++)
+            {
+                string buttons = pilWebElements[i].Text;//FindElement(By.XPath("//*[@class='quickLinkText']")).Text;
+                if (i != pilWebElements.Count - 1)
+                {
+                    ResultString = ResultString + buttons + ", ";
+                }
+                else
+                {
+                    ResultString = ResultString + buttons + " ";
+                }
+            }
+
+            return ResultString;
         }
     }
 }
