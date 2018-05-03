@@ -251,6 +251,7 @@ namespace SeleniumExcel
                             IList<IWebElement> quickLaunchButtons = m_iwbWebDriver.FindElements(By.XPath("//*[@class='quickLinkText']"));
                             IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendLabel']"));
                             IList<IWebElement> pieLabel = m_iwbWebDriver.FindElements(By.XPath("//*[@class='pieLabel']"));
+                            IList<IWebElement> graphColor = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendColorBox']"));
                             wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='pieLabel']")));
 
                             
@@ -258,6 +259,11 @@ namespace SeleniumExcel
                             if (graphic.Displayed)
                             {
                                 graphDisplay = "The graphic is displayed";
+                            }
+
+                            if (graphColor.Count == graphLegend.Count)
+                            {
+                                graphDisplay = graphDisplay + " All the colors are displayed for their respective legends ";
                             }
                             //for (int i = 0; i < quickLaunchButtons.Count; i++)
                             //{
