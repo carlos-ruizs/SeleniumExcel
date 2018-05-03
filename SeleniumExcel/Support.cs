@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium.Interactions;
 using PruebaExcel_EPplus;
 using OfficeOpenXml;
 using System.IO;
@@ -242,18 +243,22 @@ namespace SeleniumExcel
                             //Test case 5
                             //Validate the buttons, elements, and graphics in the screen
                             m_iwbWebDriver.FindElement(By.Id("menu_dashboard_index")).Click(); //Click the dashboard menu
+                            var wait = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(10));
+                            wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='flot-base']")));
                             string resultString = null;
+                            string graphDisplay = null;
                             //Validation of quick launch buttons
                             IList<IWebElement> quickLaunchButtons = m_iwbWebDriver.FindElements(By.XPath("//*[@class='quickLinkText']"));
                             IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendLabel']"));
                             IList<IWebElement> pieLabel = m_iwbWebDriver.FindElements(By.XPath("//*[@class='pieLabel']"));
-                            /*
+                            wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='pieLabel']")));
+
+                            
                             IWebElement graphic = m_iwbWebDriver.FindElement(By.XPath("//*[@class='flot-base']"));
                             if (graphic.Displayed)
                             {
-                                string graphDisplay = "The graphic is displayed";
+                                graphDisplay = "The graphic is displayed";
                             }
-                            */
                             //for (int i = 0; i < quickLaunchButtons.Count; i++)
                             //{
                             //    string buttons = quickLaunchButtons[i].Text;//FindElement(By.XPath("//*[@class='quickLinkText']")).Text;
@@ -293,7 +298,7 @@ namespace SeleniumExcel
                             string percents = null;
                             percents = GetWebElements(pieLabel,pieLabel.Count);
                             Console.WriteLine(percents);
-                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString + labels);
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString + labels + percents + graphDisplay);
                             //m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), labels);
 
                             /*
@@ -515,7 +520,7 @@ namespace SeleniumExcel
             string ResultString = null;
             for (int i = 0; i < pilWebElements.Count; i++)
             {
-                string buttons = pilWebElements[i].Text;//FindElement(By.XPath("//*[@class='quickLinkText']")).Text;
+                string buttons = pilWebElements[i].Text;
                 if (i != pilWebElements.Count - 1)
                 {
                     ResultString = ResultString + buttons + ", ";

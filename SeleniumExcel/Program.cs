@@ -26,7 +26,7 @@ namespace SeleniumExcel
                 List<int> RunCases = new List<int>();
                 //FirefoxOptions options = new FirefoxOptions();
                 IWebDriver driverFF = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64"/*,options,TimeSpan.FromSeconds(40)*/);
-                driverFF.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(45);
+                //driverFF.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(45);
                 LibExcel_epp objeto_Excel = new LibExcel_epp();
                 Support objeto_Support = new Support("WorkbookSelenium", "Sheet1", driverFF, objeto_Excel);
 
