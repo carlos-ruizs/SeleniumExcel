@@ -247,14 +247,16 @@ namespace SeleniumExcel
                             wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='flot-base']")));
                             string resultString = null;
                             string graphDisplay = null;
-                            //Validation of quick launch buttons
+                            string labels = null;
+                            string percents = null;
+
+                            //Validation of quick launch buttons, colors and labels for the legends of the graphic, the elements inside the graphic and the graphic itself
                             IList<IWebElement> quickLaunchButtons = m_iwbWebDriver.FindElements(By.XPath("//*[@class='quickLinkText']"));
                             IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendLabel']"));
                             IList<IWebElement> pieLabel = m_iwbWebDriver.FindElements(By.XPath("//*[@class='pieLabel']"));
                             IList<IWebElement> graphColor = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendColorBox']"));
                             wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='pieLabel']")));
 
-                            
                             IWebElement graphic = m_iwbWebDriver.FindElement(By.XPath("//*[@class='flot-base']"));
                             if (graphic.Displayed)
                             {
@@ -265,84 +267,15 @@ namespace SeleniumExcel
                             {
                                 graphDisplay = graphDisplay + " All the colors are displayed for their respective legends ";
                             }
-                            //for (int i = 0; i < quickLaunchButtons.Count; i++)
-                            //{
-                            //    string buttons = quickLaunchButtons[i].Text;//FindElement(By.XPath("//*[@class='quickLinkText']")).Text;
-                            //    if (i != quickLaunchButtons.Count - 1)
-                            //    {
-                            //        resultString = resultString + buttons + ", ";
-                            //    }
-                            //    else
-                            //    {
-                            //        resultString = resultString + buttons + " ";
-                            //    }
-                            //}
 
                             resultString = GetWebElements(quickLaunchButtons,quickLaunchButtons.Count);
-
+                            labels = GetWebElements(graphLegend, graphLegend.Count);
+                            percents = GetWebElements(pieLabel, pieLabel.Count);
                             Console.WriteLine(resultString);
-                           
-                            string labels = null;
-                            //Validation of the graph legends
-                            
-                            //for (int i = 0; i < graphLegend.Count; i++)
-                            //{
-                            //    Console.WriteLine(i);
-                            //    //string legends = graphLegend[i].FindElement(By.XPath("//*[@class='legendLabel']")).GetAttribute("text");
-                            //    string legends = graphLegend[i].Text;
-                            //    if (i != graphLegend.Count - 1)
-                            //    {
-                            //        labels = labels + legends + ", ";
-                            //    }
-                            //    else
-                            //    {
-                            //        labels = labels + legends + " ";
-                            //    }
-                            //}
-                            labels = GetWebElements(graphLegend,graphLegend.Count);
                             Console.WriteLine(labels);
-                            string percents = null;
-                            percents = GetWebElements(pieLabel,pieLabel.Count);
                             Console.WriteLine(percents);
                             m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString + labels + percents + graphDisplay);
-                            //m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), labels);
 
-                            /*
-                            //Validation of graph colors in the legends
-                            IList<IWebElement> graphColor = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendColorBox']"));
-                            for (int i = 0; i < graphColor.Count; i++)
-                            { 
-                                if (graphColor[i].Displayed)
-                                {
-                                    resultString = "The color label exists for legend number " + i + ", ";
-                                }
-                                else
-                                {
-                                    resultString = "The color label exists for legend number " + i + " ";
-                                }
-                            }
-
-                            Console.WriteLine(resultString);
-                            resultString = null;
-                            */
-
-                            /*
-                            IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.ClassName(""));//el ID que está aquí es el del espacio donde están las leyendas
-
-                            for (int i = 0; i < graphLegend.Count; i++)
-                            {
-                                if (graphLegend[i].FindElement(By.ClassName("legendColorBox")).Enabled)
-                                {
-                                    Console.WriteLine("The color is displayed for the legend is displayed");
-                                }
-                                if (graphLegend[i].FindElement(By.ClassName("legendLabel")).Enabled)
-                                {
-                                    Console.WriteLine("The label for the legend is displayed");
-                                }
-                                string validatemenus = graphLegend[i].FindElement(By.ClassName("legendLabel")).Text;
-                                Validations = Validations + validatemenus + " Exists" + ", ";
-                            }
-                            */
                             break;
                         case "6":
 
