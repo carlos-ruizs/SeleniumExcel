@@ -277,10 +277,21 @@ namespace SeleniumExcel
                             m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString + labels + percents + graphDisplay);
 
                             break;
+
                         case "6":
 
                             break;
+
                         case "7":
+                            m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com/index.php/auth/logout");
+                            if (m_iwbWebDriver.Url == "http://opensource.demo.orangehrmlive.com/index.php/auth/login")
+                            {
+                                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), "The logout action was successful");
+                            }
+                            else
+                            {
+                                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), "Logout action unsuccessful");
+                            }
 
                             break;
 
