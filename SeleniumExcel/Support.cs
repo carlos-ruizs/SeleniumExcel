@@ -279,7 +279,43 @@ namespace SeleniumExcel
                             break;
 
                         case "6":
+                            //test case 6
+                            //Goes to the Assign Leave submenu of the Leave menu and validates the elements required for the textboxes
+                            int r = 0;//variable that keeps track of the labels inside the page
+                            string ResultsLabels = null;
+                            By byId = By.Id("menu_leave_viewLeaveModule");
+                            By css = By.CssSelector("a[href*='leave/assignLeave']");
 
+                            //Moves the cursor to the Leave menu and builds an action to click it, go to the submenu required and click it too
+                            Actions action = new Actions(m_iwbWebDriver);
+                            IWebElement we = m_iwbWebDriver.FindElement(byId);
+                            action.MoveToElement(we).Build().Perform();
+                            new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(5)).Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(css)).Click();
+
+                            IList<IWebElement> labels1 = m_iwbWebDriver.FindElements(By.XPath("//*[@id='frmLeaveApply']/fieldset/ol/li/label"));
+                            m_iwbWebDriver.FindElement(By.Id("assignBtn")).Click();
+                            IList<IWebElement> validationslabels = m_iwbWebDriver.FindElements(By.XPath("//*[@id='frmLeaveApply']/fieldset/ol/li/span"));
+
+                            //This for loop iterates through the elements that were saved inside our lists and gets their inner text
+                            for (int i = 0; i < labels1.Count; i++)
+                            {
+                                if (i <= 4 || i == 9)
+                                {
+                                    Console.WriteLine("Label " + i + " " + labels1[i].Text);
+                                    string labelsToCheck = labels1[i].Text;
+
+                                    if (i <= 1 || i == 3 || i == 4)
+                                    {
+                                        Console.WriteLine("Validation " + r + " " + validationslabels[r].Text);
+                                        string validation = validationslabels[r].Text;
+                                        ResultsLabels += labelsToCheck + " " + validation + " " + ",";
+                                        r++;
+                                    }
+                                }
+
+                            }
+                            //Console.WriteLine(ResultsLabels);
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), ResultsLabels);
                             break;
 
                         case "7":
