@@ -169,7 +169,7 @@ namespace SeleniumExcel
             }
             else
             {
-                if (pintIterationNumber > 0 && (plRunElements[pintIterationNumber - 1] == " " || plRunElements[pintIterationNumber - 1] == "0"))
+                if (pintIterationNumber > 0 && (plRunElements[pintIterationNumber - 1] == " " || plRunElements[pintIterationNumber - 1] != "1"))
                 {
                     //Quiero ver cuál fue el último elemento que tuvo un uno para ubicar su índice
                     for (int i = pintIterationNumber - 1; i >= 0; i--)
