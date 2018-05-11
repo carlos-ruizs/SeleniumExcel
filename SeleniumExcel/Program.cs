@@ -18,92 +18,100 @@ namespace SeleniumExcel
     {
         static void Main(string[] args)
         {
-            FileInfo excelFile = new FileInfo(@"E:\WorkbookSelenium.xlsx");
-
-            //checks if the file we have in excelFile exists and if it does, it instantiates the objects for the webdriver and everything else
-            if (excelFile.Exists)
+            try
             {
-                List<int> RunCases = new List<int>();
-                IWebDriver driverFF = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
-                LibExcel_epp objeto_Excel = new LibExcel_epp();
-                Support objeto_Support = new Support("WorkbookSelenium", "Sheet1", driverFF, objeto_Excel);
-
-                //objeto_Excel.m_strFileName = "WorkbookSelenium";
-                //objeto_Excel.m_fileInfo = excelFile;
-                objeto_Support.GetExcelElements();
- 
-                //This for-loop iterates through every element in the worksheet that has a number of results to save
-                //TODO change "objeto_Support.m_plNumberOfResultsToSave.Count - 1" to something that better reflects how many actions we'll be checking 
-                for (int listIndex = 0; listIndex <= objeto_Support.m_plNumberOfResultsToSave.Count - 1; listIndex++)
+                FileInfo excelFile = new FileInfo(@"E:\WorkbookSelenium.xlsx");
+                //checks if the file we have in excelFile exists and if it does, it instantiates the objects for the webdriver and everything else
+                if (excelFile.Exists)
                 {
-                    //This if-else checks if there's a 0 or a blank space to avoid executing that element
-                    if (objeto_Support.m_plRunElements[listIndex] == " ")
+                    List<int> RunCases = new List<int>();
+                    //FirefoxOptions options = new FirefoxOptions();
+                    IWebDriver driverFF = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64"/*,options,TimeSpan.FromSeconds(40)*/);
+                    //driverFF.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(35);
+                    LibExcel_epp objeto_Excel = new LibExcel_epp();
+                    Support objeto_Support = new Support("WorkbookSelenium", "Sheet1", driverFF, objeto_Excel);
+                    objeto_Support.GetExcelElements();
+
+                    //This for-loop iterates through every element in the worksheet that has a number of results to save
+                    //TODO change "objeto_Support.m_plNumberOfResultsToSave.Count - 1" to something that better reflects how many actions we'll be checking
+                    //TODO Change this for loop so that it "knows" that even if the first element inside the sheet had a 0 in it's Run column, it's still the first element of the list to search so it should use the first search options
+                    for (int listIndex = 0; listIndex <= objeto_Support.m_plNumberOfResultsToSave.Count - 1; listIndex++)
                     {
-                        continue;
-                    }
-                    else
-                    {
-                        if (objeto_Support.m_plRunElements[listIndex] == "0")
+                        //This if-else checks if there's a 0 or a blank space to avoid executing that element
+                        if (objeto_Support.m_plRunElements[listIndex] == " ")
                         {
                             continue;
                         }
-                    }
-
-                    //converts every element in the Actions column of the worksheet, so we can later check if an action in the column is valid or not
-                    objeto_Support.m_plActions = objeto_Support.m_plActions.ConvertAll(d => d.ToUpper());
-
-                    //This switch checks which actions are to be executed for the elements in the worksheet
-                    switch (objeto_Support.m_plActions[listIndex])
-                    {
-                        case "SEARCH":
-                            objeto_Support.SearchGoogle(listIndex);
-
-                            break;
-                        case "CREATE":
-                            Console.WriteLine("You already created a .xlsx file");
-                            break;
-
-                        case "LOGIN":
-                            Console.WriteLine("I'm gonna check if the sheet where the values are stored exists");
-                            if (objeto_Support.m_plWorksheetNames.Contains("Login"))
+                        else
+                        {
+                            if (objeto_Support.m_plRunElements[listIndex] != "1")
                             {
-                                using(ExcelPackage excelPackage = new ExcelPackage(objeto_Support.m_fiFilePath))
+                                continue;
+                            }
+                        }
+
+                        //converts every element in the Actions column of the worksheet, so we can later check if an action in the column is valid or not
+                        objeto_Support.m_plActions = objeto_Support.m_plActions.ConvertAll(d => d.ToUpper());
+
+                        //This switch checks which actions are to be executed for the elements in the worksheet
+                        switch (objeto_Support.m_plActions[listIndex])
+                        {
+                            case "SEARCH":
+                                objeto_Support.SearchGoogle(listIndex);
+
+                                break;
+                            case "CREATE":
+                                Console.WriteLine("You already created a .xlsx file");
+                                break;
+
+                            case "LOGIN":
+                                Console.WriteLine("I'm gonna check if the sheet where the values are stored exists");
+                                if (objeto_Support.m_plWorksheetNames.Contains("Login"))
                                 {
-                                    ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets["Login"];
-
-                                    for (int rowIndex = worksheet.Dimension.Start.Row; rowIndex <= worksheet.Dimension.End.Row; rowIndex++)
+                                    using (ExcelPackage excelPackage = new ExcelPackage(objeto_Support.m_fiFilePath))
                                     {
-                                        for (int colIndex = worksheet.Dimension.Start.Column; colIndex <= worksheet.Dimension.End.Column; colIndex++)
+                                        ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets["Login"];
+                                        if (objeto_Excel.FindElement("WorkbookSelenium", "Sheet1", listIndex + 2, "Username") == null || objeto_Excel.FindElement("WorkbookSelenium", "Sheet1", listIndex + 2, "Password") == null)
                                         {
-                                            if (worksheet.Cells[rowIndex, colIndex].Value != null) //if the value in a specific cell isn't null, then
-                                            {
-                                                string columnName = worksheet.Cells[rowIndex, colIndex].Value.ToString(); //gets the value in a cell and transformrs it into a string
-
-                                                Console.Write(columnName + " ");
-                                            }
+                                            Console.WriteLine("Fields Username or Password are null or empty");
+                                            Console.WriteLine("Row without Username or Password: " + listIndex + 2);
+                                            continue;
+                                        }
+                                        else
+                                        {
+                                            objeto_Support.Login("opensource.demo.orangehrmlive.com", listIndex);
                                         }
                                     }
                                 }
-                                Console.ReadKey();
-                            }
-                            else
-                            {
-                                Console.WriteLine("The worksheet doesn't exist");
-                            }
+                                else
+                                {
+                                    Console.WriteLine("The worksheet doesn't exist");
+                                }
 
-                            break;
+                                break;
 
-                        default:
-                            Console.WriteLine("The case " + objeto_Support.m_plActions[listIndex] + " doesn't exist");
-                            break;
+                            default:
+                                Console.WriteLine("The case " + objeto_Support.m_plActions[listIndex] + " doesn't exist");
+                                break;
+                        }
                     }
+
+                    objeto_Support.m_iwbWebDriver.Close();
                 }
-                
-                objeto_Support.m_iwbWebDriver.Close();
+                else
+                {
+                    Console.WriteLine("The file in " + excelFile.FullName + " wasn't found"); //Prints the full path of the file that we tried to use
+                    Console.ReadKey();
+                }
             }
-            else
+            catch (WebDriverTimeoutException wdtoException)
             {
-                Console.WriteLine("The file in " + excelFile.FullName + " wasn't found"); //Prints the full path of the file that we tried to use
+                Console.WriteLine(wdtoException.Message);
+                Console.ReadKey();
+            }
+            catch (DriverServiceNotFoundException dsnfException)
+            {
+                Console.WriteLine(dsnfException.Message);
                 Console.ReadKey();
             }
         }

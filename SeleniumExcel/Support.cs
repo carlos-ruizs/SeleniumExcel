@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium.Interactions;
 using PruebaExcel_EPplus;
 using OfficeOpenXml;
 using System.IO;
@@ -78,9 +79,6 @@ namespace SeleniumExcel
             }
         }
 
-        //TODO cambiar la manera en la que mete las cosas al Excel para que sea en base al título de la columna y no estático
-        //TODO intentar hacerlo todo menos estático
-        //TODO poner un método para revisar si existe un archivo de Excel y controlar qué pasa si hay o no hay
         public void SearchGoogle(IWebDriver piwbDriver, LibExcel_epp pleeExcelObject, string pstrWorkbookName, string pstrWorksheetName)
         {
             piwbDriver.Navigate().GoToUrl("http://www.google.com/");
@@ -101,7 +99,7 @@ namespace SeleniumExcel
 
             //m_iwbWebDriver.Close();
         }
-
+        //TODO Change this too so that it complements what the outer for-loop in Program.cs when it comes to elements that have a 1 or 0 in it's Run column
         /// <summary>
         /// Enters a for loop that iterates through all the search strings we want to use, 
         /// as well as the number of saved results we want in the worksheet
@@ -116,22 +114,18 @@ namespace SeleniumExcel
         /// <param name="pstrSearchString"></param>
         public void Results(List<string> plHeaderNames, List<string> plSearchStrings, List<string> plResultNumbers, List<string> plRunElements, int listIndex)
         {
-
-            if (listIndex == 0)
-            {
-                m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
-            }
-
+            IfNIteration(listIndex, plRunElements, plHeaderNames);
+            
             int elementsToSave = int.Parse(plResultNumbers[listIndex]); //converts the strings inside the resultsToSave list into integers we will use to determine how many results we will save for that particular search
             m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(plSearchStrings[listIndex]); //finds the search bar and sends the string we want to search into it
-
+            
             /*
             Checks if it's the first time it's searching on Google 
             If true, it looks for the btnK button and clicks it
             If false, it looks for the btnG button and clicks it
             The button changes names depending where you are. 
             */
-            if (listIndex == 0)
+            if (m_iwbWebDriver.Url == "https://www.google.com/?gws_rd=ssl" || m_iwbWebDriver.Url == "https://www.google.com/")
             {
                 m_iwbWebDriver.FindElement(By.Name("btnK")).Click();
             }
@@ -156,6 +150,197 @@ namespace SeleniumExcel
             m_iwbWebDriver.FindElement(By.Id("lst-ib")).Clear(); //clears the search field when we finish with a search
         }
 
+        /// <summary>
+        /// This checks if it's the first iteration for the Search action and if the Run column associated to it has a 1, 0 or null value
+        /// If it's a 1, then it simply goes to google.com
+        /// If it's in any other iteration, it checks if the value in the Run column for the string before it was 0 or null so it knows
+        /// it's going to google.com for the "first" time since it is the first string it will search.
+        /// Right now it works only if the Search actions are the first things inside the worksheet
+        /// </summary>
+        /// <param name="pintIterationNumber"></param>
+        /// <param name="plRunElements"></param>
+        /// <param name="plHeaderNames"></param>
+        //TODO Change this in the future so that it knows it's the first iteration of the "Search" action no matter where in the worksheet it's found
+        private void IfNIteration(int pintIterationNumber, List<string> plRunElements, List<string> plHeaderNames)
+        {
+
+            if (pintIterationNumber == 0 && plRunElements[pintIterationNumber] == "1")
+            {
+                m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
+            }
+            else
+            {
+                if (pintIterationNumber > 0 && (plRunElements[pintIterationNumber - 1] == " " || plRunElements[pintIterationNumber - 1] != "1"))
+                {
+                    //Quiero ver cuál fue el último elemento que tuvo un uno para ubicar su índice
+                    for (int i = pintIterationNumber - 1; i >= 0; i--)
+                    {
+                        if (plRunElements[i] == "1") //If there was at least one element before the current one that executed
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Function that gets parameters like username and password in order to validate what kind of results
+        /// do we have by login in.
+        /// </summary>
+        /// <param name="URL"></param>
+        /// <param name="plHeaderNames"></param>
+        public void Login(string URL, int RowIndex)
+        {
+            string ResultsLogin, Validations = null;
+
+            m_iwbWebDriver.FindElement(By.CssSelector("body")).SendKeys(Keys.Control + "t");
+            m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com");
+
+            //m_iwbWebDriver.Navigate().GoToUrl(URL);3
+            //GetRowIndex(m_plActions, "Login");
+            using (ExcelPackage excel = new ExcelPackage(m_fiFilePath))
+            {
+                ExcelWorksheet worksheet = excel.Workbook.Worksheets["Sheet1"];
+                //string user1 = m_leeExcelObject.IterateByColumnName(worksheet, RowIndex, m_plHeaderNames, "Username");
+                //string pass1 = m_leeExcelObject.IterateByColumnName(worksheet, RowIndex, m_plHeaderNames, "Password");
+
+                string user = m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Username");
+                string pass = m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Password");
+                m_iwbWebDriver.FindElement(By.Id("txtUsername")).SendKeys(user);
+                m_iwbWebDriver.FindElement(By.Id("txtPassword")).SendKeys(pass);
+                m_iwbWebDriver.FindElement(By.Id("btnLogin")).Click();
+
+                if (m_iwbWebDriver.Url == "http://opensource.demo.orangehrmlive.com/index.php/dashboard")
+                {
+                    ResultsLogin = "Succesful Login";
+
+                    switch (m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Test Case"))
+                    {
+                        case "1":
+                        case "2":
+                        case "3":
+                            break;
+
+                        case "4":
+                            IList<IWebElement> bMenus = m_iwbWebDriver.FindElements(By.ClassName("firstLevelMenu"));
+                            //Also check this for, it should be getting the elements but it doesn't
+                            //This for is supposed to do the same as we did with the result links but with the elements in the page
+                            for (int i = 0; i < bMenus.Count; i++)
+                            {
+                                string validatemenus = bMenus[i].FindElement(By.TagName("b")).Text;
+                                Validations = Validations + validatemenus + " Exists" + ", ";
+                                Console.WriteLine(Validations);
+                            }
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), Validations);
+
+                            break;
+                        case "5":
+                            //Test case 5
+                            //Validate the buttons, elements, and graphics in the screen
+                            m_iwbWebDriver.FindElement(By.Id("menu_dashboard_index")).Click(); //Click the dashboard menu
+                            var wait = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(10));
+                            wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='flot-base']")));
+                            string resultString = null;
+                            string graphDisplay = null;
+                            string labels = null;
+                            string percents = null;
+
+                            //Validation of quick launch buttons, colors and labels for the legends of the graphic, the elements inside the graphic and the graphic itself
+                            IList<IWebElement> quickLaunchButtons = m_iwbWebDriver.FindElements(By.XPath("//*[@class='quickLinkText']"));
+                            IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendLabel']"));
+                            IList<IWebElement> pieLabel = m_iwbWebDriver.FindElements(By.XPath("//*[@class='pieLabel']"));
+                            IList<IWebElement> graphColor = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendColorBox']"));
+                            wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='pieLabel']")));
+
+                            IWebElement graphic = m_iwbWebDriver.FindElement(By.XPath("//*[@class='flot-base']"));
+                            if (graphic.Displayed)
+                            {
+                                graphDisplay = "The graphic is displayed";
+                            }
+
+                            if (graphColor.Count == graphLegend.Count)
+                            {
+                                graphDisplay = graphDisplay + " All the colors are displayed for their respective legends ";
+                            }
+
+                            resultString = GetWebElements(quickLaunchButtons,quickLaunchButtons.Count);
+                            labels = GetWebElements(graphLegend, graphLegend.Count);
+                            percents = GetWebElements(pieLabel, pieLabel.Count);
+                            Console.WriteLine(resultString);
+                            Console.WriteLine(labels);
+                            Console.WriteLine(percents);
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString + labels + percents + graphDisplay);
+
+                            break;
+
+                        case "6":
+                            //test case 6
+                            //Goes to the Assign Leave submenu of the Leave menu and validates the elements required for the textboxes
+                            int r = 0;//variable that keeps track of the labels inside the page
+                            string ResultsLabels = null;
+
+                            m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com/index.php/leave/assignLeave");
+                            IList<IWebElement> labels1 = m_iwbWebDriver.FindElements(By.XPath("//*[@id='frmLeaveApply']/fieldset/ol/li/label"));
+                            m_iwbWebDriver.FindElement(By.Id("assignBtn")).Click();
+                            IList<IWebElement> validationslabels = m_iwbWebDriver.FindElements(By.XPath("//*[@id='frmLeaveApply']/fieldset/ol/li/span"));
+
+                            //This for loop iterates through the elements that were saved inside our lists and gets their inner text
+                            for (int i = 0; i < labels1.Count; i++)
+                            {
+                                if (i <= 4 || i == 9)
+                                {
+                                    Console.WriteLine("Label " + i + " " + labels1[i].Text);
+                                    string labelsToCheck = labels1[i].Text;
+
+                                    if (i <= 1 || i == 3 || i == 4)
+                                    {
+                                        Console.WriteLine("Validation " + r + " " + validationslabels[r].Text);
+                                        string validation = validationslabels[r].Text;
+                                        ResultsLabels += labelsToCheck + " " + validation + " " + ",";
+                                        r++;
+                                    }
+                                }
+
+                            }
+                            //Console.WriteLine(ResultsLabels);
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), ResultsLabels);
+                            break;
+
+                        case "7":
+                            m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com/index.php/auth/logout");
+                            if (m_iwbWebDriver.Url == "http://opensource.demo.orangehrmlive.com/index.php/auth/login")
+                            {
+                                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), "The logout action was successful");
+                            }
+                            else
+                            {
+                                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), "Logout action unsuccessful");
+                            }
+
+                            break;
+
+                        default:
+                            Console.WriteLine("The test case doesn't exist");
+                            break;
+                    }
+                    m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com/index.php/auth/logout");//Logout after each test case
+                }
+                else
+                {
+                    ResultsLogin = m_iwbWebDriver.FindElement(By.Id("spanMessage")).Text;
+                }
+
+                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Results Login"), ResultsLogin);
+
+            }
+
+        }
 
         /// <summary>
         /// Fills some lists we created so we can use them to know how many search results we will
@@ -308,6 +493,25 @@ namespace SeleniumExcel
             string sub2 = sub.Substring(0, sub.Length - 28);
 
             return sub2;
+        }
+
+        public string GetWebElements(IList<IWebElement> pilWebElements, int pintLimit)
+        {
+            string ResultString = null;
+            for (int i = 0; i < pilWebElements.Count; i++)
+            {
+                string buttons = pilWebElements[i].Text;
+                if (i != pilWebElements.Count - 1)
+                {
+                    ResultString = ResultString + buttons + ", ";
+                }
+                else
+                {
+                    ResultString = ResultString + buttons + " ";
+                }
+            }
+
+            return ResultString;
         }
     }
 }
