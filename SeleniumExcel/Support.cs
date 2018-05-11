@@ -163,6 +163,7 @@ namespace SeleniumExcel
         //TODO Change this in the future so that it knows it's the first iteration of the "Search" action no matter where in the worksheet it's found
         private void IfNIteration(int pintIterationNumber, List<string> plRunElements, List<string> plHeaderNames)
         {
+
             if (pintIterationNumber == 0 && plRunElements[pintIterationNumber] == "1")
             {
                 m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
@@ -244,7 +245,7 @@ namespace SeleniumExcel
                             //Validate the buttons, elements, and graphics in the screen
                             m_iwbWebDriver.FindElement(By.Id("menu_dashboard_index")).Click(); //Click the dashboard menu
                             var wait = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(10));
-                            wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='flot-base']")));
+                            wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='flot-base']")));
                             string resultString = null;
                             string graphDisplay = null;
                             string labels = null;
@@ -255,7 +256,7 @@ namespace SeleniumExcel
                             IList<IWebElement> graphLegend = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendLabel']"));
                             IList<IWebElement> pieLabel = m_iwbWebDriver.FindElements(By.XPath("//*[@class='pieLabel']"));
                             IList<IWebElement> graphColor = m_iwbWebDriver.FindElements(By.XPath("//*[@class='legendColorBox']"));
-                            wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='pieLabel']")));
+                            wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.XPath("//*[@class='pieLabel']")));
 
                             IWebElement graphic = m_iwbWebDriver.FindElement(By.XPath("//*[@class='flot-base']"));
                             if (graphic.Displayed)
@@ -283,15 +284,8 @@ namespace SeleniumExcel
                             //Goes to the Assign Leave submenu of the Leave menu and validates the elements required for the textboxes
                             int r = 0;//variable that keeps track of the labels inside the page
                             string ResultsLabels = null;
-                            By byId = By.Id("menu_leave_viewLeaveModule");
-                            By css = By.CssSelector("a[href*='leave/assignLeave']");
 
-                            //Moves the cursor to the Leave menu and builds an action to click it, go to the submenu required and click it too
-                            Actions action = new Actions(m_iwbWebDriver);
-                            IWebElement we = m_iwbWebDriver.FindElement(byId);
-                            action.MoveToElement(we).Build().Perform();
-                            new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(5)).Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(css)).Click();
-
+                            m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com/index.php/leave/assignLeave");
                             IList<IWebElement> labels1 = m_iwbWebDriver.FindElements(By.XPath("//*[@id='frmLeaveApply']/fieldset/ol/li/label"));
                             m_iwbWebDriver.FindElement(By.Id("assignBtn")).Click();
                             IList<IWebElement> validationslabels = m_iwbWebDriver.FindElements(By.XPath("//*[@id='frmLeaveApply']/fieldset/ol/li/span"));
