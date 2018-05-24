@@ -10,6 +10,7 @@ using OpenQA.Selenium.Interactions;
 using PruebaExcel_EPplus;
 using OfficeOpenXml;
 using System.IO;
+using NUnit.Framework;
 
 namespace SeleniumExcel
 {
@@ -27,6 +28,7 @@ namespace SeleniumExcel
         public List<string> m_plWorksheetNames; //names of all the worksheets in the file we're working with
         public FileInfo m_fiFilePath;
         public List<string> m_plActions; //Column that tells us what method is going to process
+        //public List<string> m_plSubmenuList; //Column that we use to know how many elements need to compare on submenu
         public int m_listIndex;
 
         //Properties
@@ -56,6 +58,7 @@ namespace SeleniumExcel
             m_plActions = new List<string>();
             m_fiFilePath = new FileInfo(@"E:\" + m_strWorkbookName + ".xlsx");
             m_plWorksheetNames = new List<string>();
+            //m_plSubmenuList = new List<string>();
             for (int worksheetsNumber = 1; worksheetsNumber <= m_leeExcelObject.GetWorksheetAmount(m_fiFilePath); worksheetsNumber++) //this has to start at 1, otherwise it will give an exception
             {
                 m_plWorksheetNames.Add(m_leeExcelObject.GetWorksheetNameFI(m_fiFilePath,worksheetsNumber));
@@ -324,7 +327,7 @@ namespace SeleniumExcel
                             }
 
                             break;
-
+                            
                         default:
                             Console.WriteLine("The test case doesn't exist");
                             break;
@@ -340,6 +343,170 @@ namespace SeleniumExcel
 
             }
 
+        }
+
+        public void Hierarchy(int RowIndex) //RowIndex es el número de fila actual en el que se encuentra el programa
+        {
+            m_iwbWebDriver.FindElement(By.CssSelector("body")).SendKeys(Keys.Control + "t");
+            m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com");
+            using (ExcelPackage excel = new ExcelPackage(m_fiFilePath))
+            {
+                string user = m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Username");
+                string pass = m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Password");
+                m_iwbWebDriver.FindElement(By.Id("txtUsername")).SendKeys(user);
+                m_iwbWebDriver.FindElement(By.Id("txtPassword")).SendKeys(pass);
+                m_iwbWebDriver.FindElement(By.Id("btnLogin")).Click();
+
+                ExcelWorksheet worksheet = excel.Workbook.Worksheets["Sheet1"];
+                ExcelWorksheet worksheet2 = excel.Workbook.Worksheets["Submenus"];
+                //List<string> submenuHeaders = new List<string>();
+                //List<string> submenuList = new List<string>();
+                //m_leeExcelObject.GetWorksheetHeader(worksheet2,submenuHeaders); //Llena la lista de encabezados de la siguiente hoja para que se puedan utilizar según se necesite
+                string firstLevelMenu = m_leeExcelObject.FindElement("WorkbookSelenium", worksheet.Name, RowIndex + 2, "Menu"); //Este es el nombre del menu al que queramos acceder que está en la columna Menú del archivo de Excel
+                Console.WriteLine(firstLevelMenu);
+
+                switch (firstLevelMenu.ToLower())
+                {
+                    case "admin":
+
+                        //List<string> adminSubmenus = new List<string>();
+                        //Console.WriteLine("Aquí iría lo que hace que vaya a la siguiente hoja del archivo");
+                        //Console.WriteLine(m_leeExcelObject.FindElement(m_strWorkbookName,"Submenus",3, firstLevelMenu.ToUpper()));
+                        CompareItems(worksheet2, firstLevelMenu, "menu_admin_viewAdminModule");
+                        break;
+
+                    case "pim":
+                        //Console.WriteLine(m_leeExcelObject.FindElement(m_strWorkbookName, "Submenus", 2, firstLevelMenu.ToUpper()));
+                        CompareItems(worksheet2, firstLevelMenu, "menu_pim_viewPimModule");
+                        break;
+
+                    case "leave":
+                        CompareItems(worksheet2, firstLevelMenu, "menu_leave_viewLeaveModule");
+                        break;
+
+                    case "time":
+                        CompareItems(worksheet2, firstLevelMenu, "menu_time_viewTimeModule");
+                        break;
+
+                    case "recruitment":
+                        CompareItems(worksheet2, firstLevelMenu, "menu_recruitment_viewRecruitmentModule");
+                        break;
+
+                    case "performance":
+                        CompareItems(worksheet2, firstLevelMenu, "menu__Performance");
+                        break;
+                            
+                    case "dashboard":
+                    case "directory":
+                        Console.WriteLine("This menu doesn't contain any submenus");
+                        break;
+
+                    default:
+                        Console.WriteLine("The menu doesn't exist");
+                        break;
+                }
+                m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com/index.php/auth/logout");
+            }
+
+
+            //m_iwbWebDriver.FindElement(By.CssSelector("body")).SendKeys(Keys.Control + "t");
+            //m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com");
+
+            //string menu = m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Menu");
+            //Console.WriteLine(menu);
+
+
+            //switch (menu.ToUpper())
+            //{
+            //    case "ADMIN":
+            //        Console.WriteLine("Si entró");
+            //        string submenu = m_leeExcelObject.FindElement(m_strWorkbookName,);
+
+            //        /*
+            //        By byId = By.Id("menu_admin_viewAdminModule");
+            //        By css = By.CssSelector("a[href*='#']");
+
+            //        Actions action = new Actions(m_iwbWebDriver);
+            //        IWebElement we = m_iwbWebDriver.FindElement(byId);
+            //        action.MoveToElement(we).Build().Perform();
+            //        new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(2)).Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(css)).Click();
+
+
+
+
+            //        /
+            //        IList<IWebElement> submenus = m_iwbWebDriver.FindElements(By.ClassName("firstLevelMenu"));
+
+            //        for (int i = 0; i < submenus.Count; i++)
+            //        {
+            //            Console.WriteLine(submenus[i].FindElement(By.TagName("a")).Text);
+            //        }
+            //        */
+            //        /*
+            //        //Also check this for, it should be getting the elements but it doesn't
+            //        //This for is supposed to do the same as we did with the result links but with the elements in the page
+            //        for (int i = 0; i < bMenus.Count; i++)
+            //        {
+            //            string validatemenus = bMenus[i].FindElement(By.TagName("b")).Text;
+            //            Validations = Validations + validatemenus + " Exists" + ", ";
+            //            Console.WriteLine(Validations);
+            //        }
+            //        */
+
+            //        /*/
+            //         * Lo que debe hacer el programa:
+            //         * Entrar con el nombre del menu que tenemos, al del submenu que estamos buscando
+            //         * Para ello hay que utilizar ciertas reglas en los nombres a buscar
+            //         * Para los menús de primer nivel, se les puede sacar con la clase "firstLevelMenu"
+            //         * El problema son los submenus porque tienen una manera distinta de nombrarse. Hay que revisar eso
+            //         * Son 24 submenus los que tengo que buscar. De los cuales 15 tienen como nombre de clase "arrow" porque tienen un tercer nivel de submenus
+            //         * 
+            //         * Los elementos on hrefs, hay que tenerlo en cuenta por si necesito buscar los elementos por el texto del enlace o por el texto parcial
+            //        */
+            //}
+        }
+
+        public void CompareItems(ExcelWorksheet worksheet2, string firstLevelMenu, string byIdName)
+        {
+            int r = 0; //A counter that checks each row of a certain column for the elements
+            int ContSub = 0; //Counter that knows how many elements are in a certain column
+
+            //This while checks the elements inside the Excel sheet that contains the menus and their submenus to know how much submenus a menu has
+            //Menus are represented by columns and their submenus are the elements of that column in an ordered manner.
+            while (m_leeExcelObject.FindElement(m_strWorkbookName,worksheet2.Name,r+1,firstLevelMenu) != null)
+            {
+                r++;
+                ContSub++;
+            }
+            
+            for (int index2 = 0; index2 < ContSub; index2++)
+            {
+                if (m_leeExcelObject.FindElement(m_strWorkbookName,worksheet2.Name,index2 + 2, firstLevelMenu) == null)
+                {
+                    continue;
+                }
+                else
+                {
+                    try
+                    {
+                        string excelString = m_leeExcelObject.FindElement("WorkbookSelenium", worksheet2.Name, index2 + 2, firstLevelMenu);
+
+                        By byId = By.Id(byIdName);
+                        Actions action = new Actions(m_iwbWebDriver);
+                        IWebElement we = m_iwbWebDriver.FindElement(byId);
+                        action.MoveToElement(we).Build().Perform();
+
+                        string webString = m_iwbWebDriver.FindElement(By.LinkText(excelString)).GetAttribute("text");
+                        Console.WriteLine(webString);
+                        Assert.AreEqual(excelString, webString);
+
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Exception (Unable to locate): " + e);
+                    }
+                }
+            }
         }
 
         /// <summary>

@@ -90,6 +90,16 @@ namespace SeleniumExcel
 
                                 break;
 
+                            case "HIERARCHY":
+                                Console.WriteLine("Checking desired hierarchy");
+                                
+                                using (ExcelPackage excelPackage = new ExcelPackage(objeto_Support.m_fiFilePath))
+                                {
+                                    objeto_Support.Hierarchy(listIndex);
+                                }
+                                
+                                break;
+
                             default:
                                 Console.WriteLine("The case " + objeto_Support.m_plActions[listIndex] + " doesn't exist");
                                 break;
@@ -112,6 +122,11 @@ namespace SeleniumExcel
             catch (DriverServiceNotFoundException dsnfException)
             {
                 Console.WriteLine(dsnfException.Message);
+                Console.ReadKey();
+            }
+            catch (InvalidOperationException ioeException) //This only happens if Firefox needs to update
+            {
+                Console.WriteLine(ioeException.Message);
                 Console.ReadKey();
             }
         }

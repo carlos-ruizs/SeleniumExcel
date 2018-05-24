@@ -526,10 +526,19 @@ namespace PruebaExcel_EPplus
         /// <returns></returns>
         public string IterateByColumnName(ExcelWorksheet pewWorksheetObject, int pintRowLimit, List<string> plColNames, string pstrSelectedColumn)
         {
-            int colLimit = plColNames.IndexOf(pstrSelectedColumn);
-            string cellValue = pewWorksheetObject.Cells[pintRowLimit, colLimit + 1].Value.ToString();
+            try
+            {
+                int colLimit = plColNames.IndexOf(pstrSelectedColumn);
+                string cellValue = pewWorksheetObject.Cells[pintRowLimit, colLimit + 1].Value.ToString();
 
-            return cellValue;
+                return cellValue;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine();
+                string cellValue2 = null;
+                return cellValue2;
+            }
         }
 
         public void Excel_Create(string SheetName, int col1, int col2, string col3, string URL)
