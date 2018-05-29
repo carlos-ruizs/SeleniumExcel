@@ -196,25 +196,22 @@ namespace SeleniumExcel
         /// Function that gets parameters like username and password in order to validate what kind of results
         /// do we have by login in.
         /// </summary>
-        /// <param name="URL"></param>
+        /// <param name="pstrURL"></param>
         /// <param name="plHeaderNames"></param>
-        public void Login(string URL, int RowIndex)
+        public void Login(string pstrURL, int pintRowIndex)
         {
             string ResultsLogin, Validations = null;
 
             m_iwbWebDriver.FindElement(By.CssSelector("body")).SendKeys(Keys.Control + "t");
             m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com");
 
-            //m_iwbWebDriver.Navigate().GoToUrl(URL);3
-            //GetRowIndex(m_plActions, "Login");
             using (ExcelPackage excel = new ExcelPackage(m_fiFilePath))
             {
                 ExcelWorksheet worksheet = excel.Workbook.Worksheets["Sheet1"];
-                //string user1 = m_leeExcelObject.IterateByColumnName(worksheet, RowIndex, m_plHeaderNames, "Username");
-                //string pass1 = m_leeExcelObject.IterateByColumnName(worksheet, RowIndex, m_plHeaderNames, "Password");
 
-                string user = m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Username");
-                string pass = m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Password");
+                string user = m_leeExcelObject.FindElement(m_strWorkbookName, worksheet.Name, pintRowIndex + 2, "Username");
+                string pass = m_leeExcelObject.FindElement(m_strWorkbookName, worksheet.Name, pintRowIndex + 2, "Password");
+
                 m_iwbWebDriver.FindElement(By.Id("txtUsername")).SendKeys(user);
                 m_iwbWebDriver.FindElement(By.Id("txtPassword")).SendKeys(pass);
                 m_iwbWebDriver.FindElement(By.Id("btnLogin")).Click();
@@ -223,7 +220,7 @@ namespace SeleniumExcel
                 {
                     ResultsLogin = "Succesful Login";
 
-                    switch (m_leeExcelObject.FindElement("WorkbookSelenium", "Sheet1", RowIndex + 2, "Test Case"))
+                    switch (m_leeExcelObject.FindElement(m_strWorkbookName, worksheet.Name, pintRowIndex + 2, "Test Case"))
                     {
                         case "1":
                         case "2":
@@ -232,15 +229,14 @@ namespace SeleniumExcel
 
                         case "4":
                             IList<IWebElement> bMenus = m_iwbWebDriver.FindElements(By.ClassName("firstLevelMenu"));
-                            //Also check this for, it should be getting the elements but it doesn't
-                            //This for is supposed to do the same as we did with the result links but with the elements in the page
+                            
                             for (int i = 0; i < bMenus.Count; i++)
                             {
                                 string validatemenus = bMenus[i].FindElement(By.TagName("b")).Text;
                                 Validations = Validations + validatemenus + " Exists" + ", ";
                                 Console.WriteLine(Validations);
                             }
-                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), Validations);
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, pintRowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), Validations);
 
                             break;
                         case "5":
@@ -278,7 +274,7 @@ namespace SeleniumExcel
                             Console.WriteLine(resultString);
                             Console.WriteLine(labels);
                             Console.WriteLine(percents);
-                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString + labels + percents + graphDisplay);
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, pintRowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), resultString + labels + percents + graphDisplay);
 
                             break;
 
@@ -311,19 +307,19 @@ namespace SeleniumExcel
                                 }
 
                             }
-                            //Console.WriteLine(ResultsLabels);
-                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), ResultsLabels);
+                            
+                            m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, pintRowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), ResultsLabels);
                             break;
 
                         case "7":
                             m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com/index.php/auth/logout");
                             if (m_iwbWebDriver.Url == "http://opensource.demo.orangehrmlive.com/index.php/auth/login")
                             {
-                                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), "The logout action was successful");
+                                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, pintRowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), "The logout action was successful");
                             }
                             else
                             {
-                                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), "Logout action unsuccessful");
+                                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, pintRowIndex + 2, GetColumnIndex(m_plHeaderNames, "Validate Login"), "Logout action unsuccessful");
                             }
 
                             break;
@@ -339,7 +335,7 @@ namespace SeleniumExcel
                     ResultsLogin = m_iwbWebDriver.FindElement(By.Id("spanMessage")).Text;
                 }
 
-                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, RowIndex + 2, GetColumnIndex(m_plHeaderNames, "Results Login"), ResultsLogin);
+                m_leeExcelObject.Excel_Mod_SingleWFI(m_strWorkbookName, m_strWorksheetName, pintRowIndex + 2, GetColumnIndex(m_plHeaderNames, "Results Login"), ResultsLogin);
 
             }
 
@@ -349,8 +345,8 @@ namespace SeleniumExcel
         /// Gets the current row and checks what menu inside the web page you want to check
         /// then it goes to that menu and calls CompareItems to check if they exist inside the webpage
         /// </summary>
-        /// <param name="RowIndex"></param>
-        public void Hierarchy(int RowIndex) //RowIndex is the number of the current line we are executing
+        /// <param name="pintRowIndex"></param>
+        public void Hierarchy(int pintRowIndex) //RowIndex is the number of the current line we are executing
         {
             m_iwbWebDriver.FindElement(By.CssSelector("body")).SendKeys(Keys.Control + "t");
             m_iwbWebDriver.Navigate().GoToUrl("http://opensource.demo.orangehrmlive.com");
@@ -359,13 +355,14 @@ namespace SeleniumExcel
                 ExcelWorksheet worksheet = excel.Workbook.Worksheets["Sheet1"];
                 ExcelWorksheet worksheet2 = excel.Workbook.Worksheets["Submenus"];
 
-                string user = m_leeExcelObject.FindElement(m_strWorkbookName, worksheet.Name, RowIndex + 2, "Username");
-                string pass = m_leeExcelObject.FindElement(m_strWorkbookName, worksheet.Name, RowIndex + 2, "Password");
+                string user = m_leeExcelObject.FindElement(m_strWorkbookName, worksheet.Name, pintRowIndex + 2, "Username");
+                string pass = m_leeExcelObject.FindElement(m_strWorkbookName, worksheet.Name, pintRowIndex + 2, "Password");
+
                 m_iwbWebDriver.FindElement(By.Id("txtUsername")).SendKeys(user);
                 m_iwbWebDriver.FindElement(By.Id("txtPassword")).SendKeys(pass);
                 m_iwbWebDriver.FindElement(By.Id("btnLogin")).Click();
 
-                string firstLevelMenu = m_leeExcelObject.FindElement("WorkbookSelenium", worksheet.Name, RowIndex + 2, "Menu"); //The name of the menu inside the "Menu" column of the spreadsheet
+                string firstLevelMenu = m_leeExcelObject.FindElement("WorkbookSelenium", worksheet.Name, pintRowIndex + 2, "Menu"); //The name of the menu inside the "Menu" column of the spreadsheet
                 Console.WriteLine(firstLevelMenu);
 
                 //This case gets the name of the menu we want to check and converts it to lowercase, if it's correct
@@ -414,17 +411,17 @@ namespace SeleniumExcel
         /// inside a specific menu and compares them with the webpage to see if they exist or so you can correctly
         /// write them in the spreadsheet. 
         /// </summary>
-        /// <param name="worksheet2"></param>
-        /// <param name="firstLevelMenu"></param>
-        /// <param name="byIdName"></param>
-        public void CompareItems(ExcelWorksheet worksheet2, string firstLevelMenu, string byIdName)
+        /// <param name="pewWorksheet2"></param>
+        /// <param name="pstFirstLevelMenu"></param>
+        /// <param name="pstrByIdName"></param>
+        public void CompareItems(ExcelWorksheet pewWorksheet2, string pstFirstLevelMenu, string pstrByIdName)
         {
             int r = 0; //A counter that checks each row of a certain column for the elements
             int ContSub = 0; //Counter that knows how many elements are in a certain column
 
             //This while checks the elements inside the Excel sheet that contains the menus and their submenus to know how much submenus a menu has
             //Menus are represented by columns and their submenus are the elements of that column in an ordered manner.
-            while (m_leeExcelObject.FindElement(m_strWorkbookName,worksheet2.Name,r+1,firstLevelMenu) != null)
+            while (m_leeExcelObject.FindElement(m_strWorkbookName,pewWorksheet2.Name,r+1,pstFirstLevelMenu) != null)
             {
                 r++;
                 ContSub++;
@@ -434,7 +431,7 @@ namespace SeleniumExcel
             // element of that column, it ignores it. 
             for (int index2 = 0; index2 < ContSub; index2++)
             {
-                if (m_leeExcelObject.FindElement(m_strWorkbookName,worksheet2.Name,index2 + 2, firstLevelMenu) == null)
+                if (m_leeExcelObject.FindElement(m_strWorkbookName,pewWorksheet2.Name,index2 + 2, pstFirstLevelMenu) == null)
                 {
                     continue;
                 }
@@ -442,9 +439,9 @@ namespace SeleniumExcel
                 {
                     try
                     {
-                        string excelString = m_leeExcelObject.FindElement(m_strWorkbookName, worksheet2.Name, index2 + 2, firstLevelMenu);
+                        string excelString = m_leeExcelObject.FindElement(m_strWorkbookName, pewWorksheet2.Name, index2 + 2, pstFirstLevelMenu);
 
-                        By byId = By.Id(byIdName);                         //This set of actions get the id of the menu we want to check
+                        By byId = By.Id(pstrByIdName);                         //This set of actions get the id of the menu we want to check
                         Actions action = new Actions(m_iwbWebDriver);      //And does a mouseover to check each one
                         IWebElement we = m_iwbWebDriver.FindElement(byId);
                         action.MoveToElement(we).Build().Perform();
