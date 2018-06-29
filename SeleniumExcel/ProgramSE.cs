@@ -14,9 +14,9 @@ using System.IO;
 namespace SeleniumExcel
 {
     //TODO change this class so that we obtain which scenarios we will be executing before calling our methods and objects
-    class Program
+    public class ProgramSE
     {
-        static void Main(string[] args)
+        public static void Main(/*string[] args*/)
         {
             try
             {
