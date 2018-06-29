@@ -17,7 +17,8 @@ namespace Selenium_DB_Excel
             int key = int.Parse(Console.ReadLine());
             if(key == 1)
             {
-                Console.WriteLine("WIP");
+                SupportSql supSql = new SupportSql();
+                supSql.DataFill();
                 Console.ReadKey();
             }
             else
