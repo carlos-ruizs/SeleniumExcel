@@ -12,26 +12,34 @@ namespace Selenium_DB_Excel
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Elija desde dónde quiere correr el programa:");
-            Console.WriteLine("1.- DB, 0.- Excel");
-            int key = int.Parse(Console.ReadLine());
-            if(key == 1)
+            try
             {
-                SupportSql supSql = new SupportSql();
-                supSql.DataFill();
-                Console.ReadKey();
-            }
-            else
-            {
-                if (key == 0)
+                Console.WriteLine("Input the number of the data source for the program:");
+                Console.WriteLine("1.- DB, 0.- Excel");
+                int key = int.Parse(Console.ReadLine());
+                if (key == 1)
                 {
-                    ProgramSE.Main();
+                    SupportSql supSql = new SupportSql();
+                    supSql.DataFill();
                 }
                 else
                 {
-                    Console.WriteLine("Opción inexistente");
-                    Console.ReadLine();
+                    if (key == 0)
+                    {
+                        ProgramSE.Main();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid option");
+                        Console.ReadLine();
+                    }
                 }
+            }
+            catch (FormatException fe)
+            {
+                Console.WriteLine(fe.Message);
+                Console.WriteLine("\nPress the enter key to close");
+                Console.ReadKey();
             }
         }
     }

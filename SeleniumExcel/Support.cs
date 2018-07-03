@@ -14,7 +14,7 @@ using NUnit.Framework;
 
 namespace SeleniumExcel
 {
-    class Support
+    public class Support
     {
         //atributes
         public string m_strWorkbookName;
