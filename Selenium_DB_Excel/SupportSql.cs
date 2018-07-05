@@ -15,11 +15,11 @@ namespace Selenium_DB_Excel
 {
     class SupportSql
     {
-        SqlConnection connection;
+        public SqlConnection connection;
         DataSet dataSet;
         DataTable masterTable;
         public IWebDriver m_iwbWebDriver;
-        Support support;
+        private Support support;
         SqlDataAdapter daAdapter;
         SqlCommandBuilder commandBuilder;
 
@@ -37,10 +37,10 @@ namespace Selenium_DB_Excel
         /// </summary>
         public void DataFill()
         {
-            daAdapter = new SqlDataAdapter("SELECT * FROM Master WHERE Run = 1", connection); //Esta query mete los elementos con un 1 en su columna Run al programa, de tal forma que sólo aquellos que se vayan a ejecutar, entren. 
+            daAdapter = new SqlDataAdapter("SELECT * FROM Master WHERE Run = 1", connection); //Query that takes the elements with a 1 in the Run column from the database and uses that as the SELECT command of the adapter 
             dataSet = new DataSet();
-            commandBuilder = new SqlCommandBuilder(daAdapter);
-            daAdapter.Fill(dataSet, "Master");
+            commandBuilder = new SqlCommandBuilder(daAdapter); //We use the CommandBuilder to generate the INSERT, UPDATE and DELETE commands after we've already set the SELECT command
+            daAdapter.Fill(dataSet, "Master"); //Fills the DataSet with the data from the DataAdapter in a table we call "Master"
             masterTable = dataSet.Tables["Master"];
             ExecuteCases();
         }
@@ -64,13 +64,12 @@ namespace Selenium_DB_Excel
         public void Search()
         {
             m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
-            DataRow[] searchRows = masterTable.Select("Actions = 'Search'");
+            DataRow[] searchRows = masterTable.Select("Actions = 'Search'"); //Gets the rows in the DataTable with the Search action to work exclusively on them
 
             for (int i = 0; i < searchRows.Length; i++)
             {
-                Console.WriteLine(searchRows[i]["Actions"] + " " + searchRows[i]["InputParameter"] + " " + searchRows[i]["NoResultsToSave"]);
-                int elementsToSave = int.Parse(searchRows[i]["NoResultsToSave"].ToString()); //Es un problema pero esto obtiene el resultado de la columna NoResultsToSave
-                m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(searchRows[i]["InputParameter"].ToString()); //Esto le manda a la página de Google la cadena que queremos buscar
+                int elementsToSave = int.Parse(searchRows[i]["NoResultsToSave"].ToString()); //Gets the number of links to save from the current search and converts it to an integer
+                m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(searchRows[i]["InputParameter"].ToString()); //Gets the string in the InputParameter column and sends it to the search bar
 
                 if (m_iwbWebDriver.Url == "https://www.google.com/?gws_rd=ssl" || m_iwbWebDriver.Url == "https://www.google.com/")
                 {
@@ -85,17 +84,16 @@ namespace Selenium_DB_Excel
                 string totalSearchResults = m_iwbWebDriver.FindElement(By.Id("resultStats")).Text; //gets the total amount of results for that particular search
                 IList<IWebElement> relatedResults = m_iwbWebDriver.FindElements(By.ClassName("nVcaUb")); //saves the links for all the related searches results into an IList
 
+                //Inserts the results of the search into the Master DataTable
                 searchRows[i]["TotalResults"] = support.GetTotalSearchResults(totalSearchResults);
                 searchRows[i]["SavedResultsLinks"] = support.GetResultsHref(h3Links, elementsToSave - 1);
                 searchRows[i]["SavedResultsText"] = support.GetResultsTxt(h3Links, elementsToSave - 1);
                 searchRows[i]["RelatedResultsLinks"] = support.GetResultsHref(relatedResults, relatedResults.Count - 1);
                 searchRows[i]["RelatedResultsText"] = support.GetResultsTxt(relatedResults, relatedResults.Count - 1);
 
-                m_iwbWebDriver.FindElement(By.Id("lst-ib")).Clear();
-
-                Console.WriteLine(elementsToSave);
+                m_iwbWebDriver.FindElement(By.Id("lst-ib")).Clear(); //Clears the search bar for the next word
             }
-            daAdapter.Update(dataSet.Tables["Master"]);
+            daAdapter.Update(dataSet.Tables["Master"]); //Uses the updated Master table to update the database
         }
 
         public void Login()
