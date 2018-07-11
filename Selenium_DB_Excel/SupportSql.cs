@@ -25,9 +25,16 @@ namespace Selenium_DB_Excel
 
         public SupportSql()
         {
-            connection = new SqlConnection("Data Source=.\\SQLEXPRESS;Initial Catalog = Selenium_DB;User ID=cruiz;Password=CR2018cr");
-            m_iwbWebDriver = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
-            support = new Support();
+            try
+            {
+                connection = new SqlConnection("Data Source=.\\SQLEXPRESS;Initial Catalog = Selenium_DB;User ID=cruiz;Password=CR2018cr");
+                m_iwbWebDriver = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
+                support = new Support();
+            }
+            catch (WebDriverException wdException)
+            {
+                Console.WriteLine(wdException.Message);
+            }
         }
 
         /// <summary>
@@ -52,7 +59,7 @@ namespace Selenium_DB_Excel
         private void ExecuteCases()
         {
             Search();
-            Login();
+            Reservation();
             m_iwbWebDriver.Close();
         }
 
@@ -96,13 +103,145 @@ namespace Selenium_DB_Excel
             daAdapter.Update(dataSet.Tables["Master"]); //Uses the updated Master table to update the database
         }
 
-        public void Login()
+        public void Reservation()
         {
-            DataRow[] loginRows = masterTable.Select("Actions = 'Login'");
+            DateTime local = DateTime.Today;
+
+            //El atributo "value" de las textboxes es lo que me dice efectivamente si cambió algo o si está vacío
+            //Y el texto placeholder sigue visible. Eso es lo que debo checar para el task 1. Continuar el lunes. 
+
+           
+             //Entonces necesito ver si está intacta la caja de texto antes de hacer algo. 
+
+            
+
+            //This two pieces of code will help me for the third test case
+            //Estos 2 pedacitos de código me van a servir para el caso 3 para cuando tenga que ver que cambie y luego volver a cambiarlo
+            //También podría servirme probablemente para el segundo test case porque igual hay que darle click a la text box
+            //Y luego darle click al elemento del calendario.
+           
+
+            
+
+            //TestCase 3 y 4
+            //DateTime local = DateTime.Today;
+            
+            DataRow[] loginRows = masterTable.Select("Actions = 'Reservation'");
 
             for (int i = 0; i < loginRows.Length; i++)
             {
-                Console.WriteLine(loginRows[i]["Actions"]+" "+loginRows[i]["TestCase"]);
+                m_iwbWebDriver.Navigate().GoToUrl("https://www.phptravels.net/");
+                m_iwbWebDriver.FindElement(By.XPath("//*[@data-title='HOTELS']")).Click(); //Clicks the Hotels button by finding it's Xpath
+
+                Console.WriteLine(loginRows[i]["Actions"] + " " + loginRows[i]["TestCase"]);
+                int switchOption = int.Parse(loginRows[i]["TestCase"].ToString());
+                switch (switchOption)
+                {
+                    case 1:
+                        //TestCase 1: verify that all the text boxes have their default values
+                        var element = m_iwbWebDriver.FindElement(By.XPath("//*[@class='select2-chosen']"));
+                        string elementText = element.Text;
+                        var elementForm = m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']"));
+                        string elementFormTxt = element.GetAttribute("value");
+                        //element.Text sería para obtener el inner text del elemento
+                        //El GetAttribute sería para saber si hay algo dentro de la caja de texto
+                        if (elementFormTxt == null)
+                            Console.WriteLine("El texto por defecto sigue ahí");
+                        Console.WriteLine(elementText);
+
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']")).SendKeys("Hola");
+                        var elmnt = m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']"));
+                        string elmntText = elmnt.GetAttribute("value");
+                        Console.WriteLine(elmntText);
+
+                        var elementCkin = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']"));
+                        string elementCkinText = elementCkin.GetAttribute("value"); //value se actualiza si se le pone algo antes,
+                        Console.WriteLine(elementCkinText);
+                        if (elementCkinText == "")
+                            Console.WriteLine("Check in field is clear");
+
+                        var elementCkout = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']"));
+                        string elementCkoutText = elementCkout.GetAttribute("value");
+                        Console.WriteLine(elementCkoutText);
+                        if (elementCkoutText == "")
+                            Console.WriteLine("Check out field is clear");
+
+                        var elementTvlrs = m_iwbWebDriver.FindElement(By.XPath("//*[@name='travellers']"));
+                        string elementTvlrsText = elementTvlrs.GetAttribute("value");
+                        Console.WriteLine(elementTvlrsText);
+                        if (elementTvlrsText == "2 Adult 0 Child")
+                            Console.WriteLine("Default text is still shown");
+                        break;
+
+                    case 2:
+                        Console.WriteLine(local.Date.ToString("d"));
+                        Console.WriteLine(local.Date.AddDays(5).ToString("d"));
+                        var wait = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(5));
+
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).SendKeys(local.Date.ToString("d"));
+                        //wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.XPath("//*[@class='table-condensed']")));
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).SendKeys(local.Date.AddDays(1).ToString("d"));
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).Clear();
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).Clear();
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).Click();
+
+                        //Se tiene que agregar una manera en la que le de click a la cosa del mes para poder llegar al mes actual
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@class='switch']")).Click();
+                        m_iwbWebDriver.FindElement(By.XPath("/html/body/div[8]/div[2]/table/tbody/tr/td/span[7]")).Click();
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).Click();
+                        m_iwbWebDriver.FindElement(By.CssSelector("div.datepicker:nth-child(13) > div:nth-child(1) > table:nth-child(1) > tbody:nth-child(2) > tr:nth-child(3) > td:nth-child(4)")).Click(); //Clicks the date in the calendar pop up
+
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).Clear();
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).Click(); //Hay que esperar a que le de click y el calendario esté visible, de ahí sería ver que escoja el día correcto. 
+                        //wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.CssSelector("div.datepicker:nth-child(14)")));
+                        //m_iwbWebDriver.FindElement(By.XPath("//*[@class='prev']")).Click();
+                        //m_iwbWebDriver.FindElement(By.XPath("//*[@class='prev']")).Click();
+                        m_iwbWebDriver.FindElement(By.CssSelector("div.datepicker:nth-child(14) > div:nth-child(1) > table:nth-child(1) > tbody:nth-child(2) > tr:nth-child(4) > td:nth-child(2)")).Click(); //Clicks the date in the calendar pop up
+                        var Ckout = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']"));
+                        string CkoutText = Ckout.GetAttribute("value");
+                        Console.WriteLine(CkoutText);
+
+                        break;
+
+                    case 3:
+                        m_iwbWebDriver.FindElement(By.Id("travellersInput")).Click();
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@id='childPlusBtn']")).Click();
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@id='childPlusBtn']")).Click();
+                        m_iwbWebDriver.FindElement(By.Id("travellersInput")).Click();
+
+                        var travellers = m_iwbWebDriver.FindElement(By.XPath("//*[@name='travellers']"));
+                        string travellersText = travellers.GetAttribute("value");
+                        Console.WriteLine(travellersText);
+
+                        if (travellersText == "2 Adult 0 Child")
+                            Console.WriteLine("Default text is still shown");
+                        else
+                            Console.WriteLine("The values changed");
+
+                        m_iwbWebDriver.FindElement(By.Id("travellersInput")).Click();
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@id='adultMinusBtn']")).Click();
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@id='childMinusBtn']")).Click();
+                        m_iwbWebDriver.FindElement(By.Id("travellersInput")).Click();
+
+                        var travellersChange = m_iwbWebDriver.FindElement(By.XPath("//*[@name='travellers']"));
+                        string tcText = travellersChange.GetAttribute("value");
+                        Console.WriteLine(tcText);
+
+                        if (tcText == travellersText)
+                            Console.WriteLine("The value is the same");
+                        else
+                            Console.WriteLine("The value changed");
+
+
+                        break;
+
+                    case 4:
+                        break;
+
+                    default:
+                        Console.WriteLine("The Test Case doesn't exist");
+                        break;
+                }
             }
         }
     }
