@@ -27,7 +27,7 @@ namespace Selenium_DB_Excel
         {
             try
             {
-                connection = new SqlConnection("Data Source=.\\SQLEXPRESS;Initial Catalog = Selenium_DB;User ID=cruiz;Password=CR2018cr");
+                connection = new SqlConnection("Data Source=.\\SQLEXPRESS;Initial Catalog = Selenium_DB;User ID=cruiz;Password=CR1194cr");
                 m_iwbWebDriver = new FirefoxDriver(@"C:\geckodriver-v0.19.1-win64");
                 support = new Support();
             }
@@ -110,23 +110,34 @@ namespace Selenium_DB_Excel
             //El atributo "value" de las textboxes es lo que me dice efectivamente si cambió algo o si está vacío
             //Y el texto placeholder sigue visible. Eso es lo que debo checar para el task 1. Continuar el lunes. 
 
-           
-             //Entonces necesito ver si está intacta la caja de texto antes de hacer algo. 
 
-            
+            //Entonces necesito ver si está intacta la caja de texto antes de hacer algo. 
+
+
 
             //This two pieces of code will help me for the third test case
             //Estos 2 pedacitos de código me van a servir para el caso 3 para cuando tenga que ver que cambie y luego volver a cambiarlo
             //También podría servirme probablemente para el segundo test case porque igual hay que darle click a la text box
             //Y luego darle click al elemento del calendario.
-           
 
-            
+
+
 
             //TestCase 3 y 4
             //DateTime local = DateTime.Today;
-            
+
             DataRow[] loginRows = masterTable.Select("Actions = 'Reservation'");
+
+            SqlCommand updateLogin = new SqlCommand("UpValidateResults", connection);
+            updateLogin.CommandType = CommandType.StoredProcedure;
+
+            daAdapter.UpdateCommand = updateLogin;
+
+            SqlParameter param1 = new SqlParameter("@ResultsLogin", SqlDbType.VarChar);
+            SqlParameter param2 = new SqlParameter("@ValidateLogin", SqlDbType.VarChar);
+            SqlParameter param3 = new SqlParameter("@TestCase", SqlDbType.TinyInt);
+            //Revisar la parte de los stored procedures mañana
+
 
             for (int i = 0; i < loginRows.Length; i++)
             {
@@ -171,12 +182,33 @@ namespace Selenium_DB_Excel
                         Console.WriteLine(elementTvlrsText);
                         if (elementTvlrsText == "2 Adult 0 Child")
                             Console.WriteLine("Default text is still shown");
+
+                        loginRows[i]["ResultsLogin"] = "Everything's fine";
+
+                       
+                        //param1.ParameterName = "@ResultsLogin";
+                        param1.Value = "default text still shows" + " Check in field is clear" + " Check out field is clear" + " Default text is still shown";
+
+                        updateLogin.Parameters.Add(param1);
+
+                        
+                        //param2.ParameterName = "@ValidateLogin";
+                        param2.Value = "Login succesful";
+
+                        updateLogin.Parameters.Add(param2);
+
+                        
+                        //param3.ParameterName = "@TestCase";
+                        param3.Value = switchOption;
+
+                        updateLogin.Parameters.Add(param3);
+
+                        daAdapter.Update(dataSet.Tables["Master"]);
                         break;
 
                     case 2:
                         Console.WriteLine(local.Date.ToString("d"));
                         Console.WriteLine(local.Date.AddDays(5).ToString("d"));
-                        var wait = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(5));
 
                         m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).SendKeys(local.Date.ToString("d"));
                         //wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.XPath("//*[@class='table-condensed']")));
@@ -232,10 +264,77 @@ namespace Selenium_DB_Excel
                         else
                             Console.WriteLine("The value changed");
 
-
                         break;
 
                     case 4:
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']")).SendKeys(" ");
+                        var wait = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(5));
+                        var elemnt = m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']"));
+                        string elemntText = elemnt.GetAttribute("value");
+                        Console.WriteLine(elemntText);
+                        
+                        Actions action = new Actions(m_iwbWebDriver);
+                        action.MoveToElement(elemnt).Click().Build().Perform();
+                        wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.ClassName("select2-no-results")));
+
+                        var txtBox = m_iwbWebDriver.FindElement(By.XPath("//*[@class='select2-no-results']"));
+                        if (txtBox.Displayed)
+                        {
+                            Console.WriteLine("The results text is displayed");
+                        }
+                        else
+                        {
+                            Console.WriteLine("The results text is not displayed");
+                        }
+
+                        action.MoveToElement(elemnt).Click().Build().Perform();
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@class='select2-input select2-focused']")).SendKeys("Hotel");
+                        wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.ClassName("select2-results"))); //Si existe results, es que hay resultados ahí. Uno o más
+                        IList<IWebElement> results = m_iwbWebDriver.FindElements(By.ClassName("select2-result-label"));
+                        var val = m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']"));
+                        string valText = val.GetAttribute("value");
+
+                        Console.WriteLine(valText);
+
+                       wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.ClassName("select2-result-label")));
+
+                        for (int j = 0; j < results.Count; j++)
+                        {
+                            string name = results[j].GetAttribute("value");
+                            Console.WriteLine();
+                        }
+
+                        var firstResult = m_iwbWebDriver.FindElement(By.ClassName("select2-result-label"));
+                        //action.MoveToElement(firstResult).Click().Build().Perform();
+                        var hotelName = m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']"));
+                        string hotelTxt = hotelName.GetAttribute("value");
+
+                        Console.WriteLine(hotelTxt);
+
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@class='select2-results-dept-1 select2-result select2-result-selectable select2-highlighted']")).Click();
+
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).SendKeys(local.Date.ToString("d"));
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).SendKeys(local.Date.AddDays(3).ToString("d"));
+
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@class='btn btn-lg btn-block btn-danger pfb0 loader']")).Click();
+
+                        if (m_iwbWebDriver.Url != "https://www.phptravels.net/")
+                            Console.WriteLine("The web page changed");
+
+                        var hotelInfo = m_iwbWebDriver.FindElement(By.XPath("//*[@class='ellipsis ttu']"));
+                        string infoTxt = hotelInfo.Text; //Sí lo consigue, pero está en mayúsculas, habría que volverlo minúsculas.
+
+                        Console.WriteLine(infoTxt);
+
+                        //Falta verificar que sea el hotel que elegí, por lo que debo de ver la forma de agarrar el value dentro de la caja de texto
+                        //del search antes de apretar el botón de buscar.
+
+
+                        //var resultsBox = m_iwbWebDriver.FindElement(By.ClassName(""));
+                        //var defText = m_iwbWebDriver.FindElement(By.ClassName("select2-no-results"));
+                        //string dfValue = defText.Text;
+                        //Console.WriteLine(elemntText);
+
                         break;
 
                     default:
