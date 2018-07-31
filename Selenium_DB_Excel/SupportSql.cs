@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 using System.Data;
@@ -131,64 +132,26 @@ namespace Selenium_DB_Excel
                 switch (switchOption)
                 {
                     case 1:
+                        //Checks if the default text for the search field is displayed
                         var element = m_iwbWebDriver.FindElement(By.XPath("//*[@class='select2-chosen']"));
                         string elementText = element.Text;
+                        resultsLoginString += IsValid(element.Displayed);
                         
-                        //Checks if the default text for the search field is displayed
-                        if (element.Displayed)
-                        {
-                            resultsLoginString = "The default text for a search is shown, ";
-                            validateLoginString = "First validation succesful, ";
-                        }
-                        else
-                        {
-                            resultsLoginString = "The default text for a search is not shown, ";
-                            validateLoginString = "First validation unsuccesful, ";
-                        }
-
+                        //Checks if the check in field doesn't have anything inside of it, same thing applies to the check out field
                         var elementCkin = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']"));
                         string elementCkinText = elementCkin.GetAttribute("value");
-
-                        //Checks if the check in field doesn't have anything inside of it, same thing applies to the check out field
-                        if (elementCkinText == "")
-                        {
-                            resultsLoginString += "Check in field is clear, ";
-                            validateLoginString += "Second validation succesful, ";
-                        }
-                        else
-                        {
-                            resultsLoginString += "Check in field is not clear, ";
-                            validateLoginString += "Second validation unsuccesful, ";
-                        }
+                        resultsLoginString += IsValid(elementCkinText == "");
 
                         var elementCkout = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']"));
                         string elementCkoutText = elementCkout.GetAttribute("value");
+                        resultsLoginString += IsValid(elementCkoutText == "");
 
-                        if (elementCkoutText == "")
-                        {
-                            resultsLoginString += "Check out field is clear, ";
-                            validateLoginString += "Third validation succesful, ";
-                        }
-                        else
-                        {
-                            resultsLoginString += "Check out field is not clear, ";
-                            validateLoginString += "Third validation unsuccesful, ";
-                        }
-                            
+                        //checks if the travellers field has the default value    
                         var elementTvlrs = m_iwbWebDriver.FindElement(By.XPath("//*[@name='travellers']"));
                         string elementTvlrsText = elementTvlrs.GetAttribute("value");
+                        resultsLoginString += IsValid(elementTvlrsText == "2 Adult 0 Child");
 
-                        //checks if the travellers field has the default value
-                        if (elementTvlrsText == "2 Adult 0 Child")
-                        {
-                            resultsLoginString += "Default adult and child numbers still shown";
-                            validateLoginString += "Final validation succesful";
-                        }
-                        else
-                        {
-                            resultsLoginString += "Default adult and child numbers are not shown";
-                            validateLoginString += "Final validation unsuccesful";
-                        }
+                        validateLoginString += ValidCount(resultsLoginString);
 
                         //Updates the database and clears the parameters 
                         loginRows[i]["ResultsLogin"] = " ";
@@ -281,17 +244,8 @@ namespace Selenium_DB_Excel
                         var travellers = m_iwbWebDriver.FindElement(By.XPath("//*[@name='travellers']"));
                         string travellersText = travellers.GetAttribute("value");
 
-                        if (travellersText == "2 Adult 0 Child") //checks if the default text has changed
-                        {
-                            resultsLoginString = "Values not changed, ";
-                            validateLoginString = "Change in first value unsuccesful, ";
-                        }
-                        else
-                        {
-                            resultsLoginString = "Values changed, ";
-                            validateLoginString = "Change in first value succesful, ";
-                        }
-                            
+                        resultsLoginString += IsValid(travellersText != "2 Adult 0 Child"); //Checks if the default text changed
+
                         //clicks the traveller field again and removes one adult and one child, then hides the field
                         m_iwbWebDriver.FindElement(By.Id("travellersInput")).Click();
                         m_iwbWebDriver.FindElement(By.XPath("//*[@id='adultMinusBtn']")).Click();
@@ -302,16 +256,9 @@ namespace Selenium_DB_Excel
                         string tcText = travellersChange.GetAttribute("value");
 
                         //Checks if the value inside the travellers input changed from the last time it had something by comparing it to it's last value
-                        if (tcText == travellersText)
-                        {
-                            resultsLoginString += "The values inside the field did not change from last time";
-                            validateLoginString += "Changes in values unsuccesful";
-                        }
-                        else
-                        {
-                            resultsLoginString += "The values changed a second time";
-                            validateLoginString += "Changes in values succesful";
-                        }
+                        resultsLoginString += IsValid(tcText != travellersText);
+
+                        validateLoginString += ValidCount(resultsLoginString);
 
                         //Updates the database and clears the parameters
                         loginRows[i]["ResultsLogin"] = " ";
@@ -332,7 +279,7 @@ namespace Selenium_DB_Excel
                         break;
 
                     case 4:
-                        var wait = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(5)); //Wait used for when we want to check if the results drop list exists
+                        var wait = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(30)); //Wait used for when we want to check if the results drop list exists
                         var elemnt = m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']"));
                         
                         Actions action = new Actions(m_iwbWebDriver); //Webdriver action used to move the cursor to click the search field
@@ -341,33 +288,16 @@ namespace Selenium_DB_Excel
 
                         //If the textbox is displayed, it adds it to the validations string
                         var txtBox = m_iwbWebDriver.FindElement(By.XPath("//*[@class='select2-no-results']"));
-                        if (txtBox.Displayed)
-                        {
-                            resultsLoginString += "The no results text is displayed, ";
-                            validateLoginString += "Validation before search successful, ";
-                        }
-                        else
-                        {
-                            resultsLoginString += "The no results text is not displayed, ";
-                            validateLoginString += "Validation before search unsuccessful, ";
-                        }
+
+                        resultsLoginString += IsValid(txtBox.Displayed);
 
                         action.MoveToElement(elemnt).Click().Build().Perform();
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@class='select2-input select2-focused']")).SendKeys("Hotel"); //This sends the word "Hotel" to the input field
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@class='select2-input select2-focused']")).SendKeys(loginRows[i]["InputParameter"].ToString()); //This sends the word "Hotel" to the input field
                         wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.ClassName("select2-results"))); //If this class exists, it's because there's 1 or more search results
                         var resultsList = m_iwbWebDriver.FindElement(By.ClassName("select2-results"));
-                        
+
                         //if this class is enabled, it means there was one or more results found
-                        if (resultsList.Enabled)
-                        {
-                            resultsLoginString += "1 or more results found, ";
-                            validateLoginString += "list of values found, ";
-                        }
-                        else
-                        {
-                            resultsLoginString += " No results found, ";
-                            validateLoginString += "list of values not found, ";
-                        }
+                        resultsLoginString += IsValid(resultsList.Enabled);
 
                         wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.ClassName("select2-result-label"))); //This waits until an element from the list is available 
 
@@ -376,32 +306,20 @@ namespace Selenium_DB_Excel
                         var firstResult = m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']")); //gets the value inside the element to check if it matches the search result
                         string hotelTxt = firstResult.GetAttribute("value");
 
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).SendKeys(local.Date.ToString("d")); //sends today's date to the check in field
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).SendKeys(local.Date.AddDays(3).ToString("d")); //sends the date three days from today to the check out field
+                        DateTime date = DateTime.Parse(loginRows[i]["Date"].ToString()); //gets the date value inside the database and casts into the DateTime type to better manipulate it
+
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).SendKeys((date.Date.ToString("dd/MM/yyyy"))); //sends today's date to the check in field
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).SendKeys(date.Date.AddDays(3).ToString("dd/MM/yyyy")); //sends the date three days from today to the check out field
 
                         m_iwbWebDriver.FindElement(By.XPath("//*[@class='btn btn-lg btn-block btn-danger pfb0 loader']")).Click(); //Clicks the search button
 
-                        if (m_iwbWebDriver.Url != "https://www.phptravels.net/") //This is to see if the webpage changes after the search button is clicked
-                        {
-                            resultsLoginString += " Webpage changed, ";
-                            validateLoginString += "Search successful, ";
-                        }
-                        else
-                        {
-                            resultsLoginString += " Webpage not changed, ";
-                            validateLoginString += "Search not successful, ";
-                        }
+                        //wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.CssSelector(".ellipsis ttu")));//Waits for the webpage to load. Check further
 
-                        if (m_iwbWebDriver.Url.Contains(hotelTxt)) //This is to see if the webpage has the info for the chosen hotel
-                        {
-                            resultsLoginString += "Webpage is for the chosen hotel";
-                            validateLoginString += "Info for the chosen hotel obtained";
-                        }
-                        else
-                        {
-                            resultsLoginString += "Webpage is not for the chosen hotel";
-                            validateLoginString += "Info for the chosen hotel wasn't obtained";
-                        }
+                        resultsLoginString += IsValid(m_iwbWebDriver.Url != "https://www.phptravels.net/"); //This is to see if the webpage changes after the search button is clicked
+
+                        resultsLoginString += IsValid(m_iwbWebDriver.Url.Contains(hotelTxt)); //This is to see if the webpage has the info for the chosen hotel
+
+                        validateLoginString += ValidCount(resultsLoginString);
 
                         //Updates the database and clears the parameters
                         loginRows[i]["ResultsLogin"] = " ";
@@ -426,5 +344,28 @@ namespace Selenium_DB_Excel
                 }
             }
         }
+
+        private string IsValid(bool pb_expression)
+        {
+            string validation = null;
+
+            if (pb_expression)
+            {
+                validation += "Validation successful ";
+            }
+            else
+            {
+                validation += "Validation unsuccessful ";
+            }
+
+            return validation;
+        }
+
+        private string ValidCount(string validationString)
+        {
+            int noValidations = Regex.Matches(validationString,"Validation successful").Count;
+            return noValidations + " validations succesful";
+        } 
+
     }
 }
