@@ -170,19 +170,59 @@ namespace Selenium_DB_Excel
                         updateLogin.Parameters.Clear();
                         break;
 
-                    case 2: //TODO change the way it gets the date so it's extracted from the database instead. 
+                    case 2: 
                         Console.WriteLine(local.Date.ToString("dd/MM/yyyy"));
-                        //Console.WriteLine(local.Date.AddDays(5).ToString("d"));
+                        DateTime dbDate = DateTime.Parse(loginRows[i]["Date"].ToString());
 
+                        int monthDB = int.Parse(dbDate.Month.ToString());
+                        Console.WriteLine(monthDB);
+                        int dayDB = int.Parse(dbDate.Day.ToString());
+                        Console.WriteLine(dayDB);
+
+                        int monthNow = int.Parse(local.Date.Month.ToString());
+                        int today = int.Parse(local.Date.Day.ToString());
+
+                        if (monthDB < monthNow)
+                        {
+                            Console.WriteLine("Date inside the database is before today");
+                            break;
+                        }
+                        else
+                        {
+                            if(monthDB > monthNow)
+                            {
+                                
+                            }
+                            else
+                            {
+                                if (dayDB < today)
+                                {
+                                    Console.WriteLine("Date is before today");
+                                    break;
+                                }
+                            }
+                        }
+
+                        IWebElement checkInBtn = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']"));
+                        IWebElement checkOutBtn = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']"));
                         //TODO change 
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).SendKeys(local.Date.ToString("d"));
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).SendKeys(dbDate.Date.ToString("dd/MM/yyyy"));
                         //wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.XPath("//*[@class='table-condensed']")));
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).SendKeys(local.Date.AddDays(1).ToString("d"));
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).SendKeys(dbDate.Date.AddDays(1).ToString("dd/MM/yyyy"));
                         m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).Clear();
                         m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).Clear();
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).Click();
 
+                        checkInBtn.Click();
+                        SelectDate(dbDate,checkInBtn);
+                        IWebElement days = m_iwbWebDriver.FindElement(By.ClassName("datepicker-days"));
+                        IWebElement daysBody = days.FindElement(By.TagName("tbody"));
+                        //checkOutBtn.Click();
+                        SelectDay(daysBody, dbDate.AddDays(5).Day.ToString());
+                        //SelectDate(dbDate.AddDays(5),checkOutBtn);
+
+                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).Click();
                         //Se tiene que agregar una manera en la que le de click a la cosa del mes para poder llegar al mes actual
+                        CheckYear(dbDate, checkInBtn); //Vamos a ponerle la fecha que quiero, el elemento al que quiero darle click
                         m_iwbWebDriver.FindElement(By.XPath("//*[@class='switch']")).Click();
                         m_iwbWebDriver.FindElement(By.XPath("/html/body/div[8]/div[2]/table/thead/tr/th[1]")).Click();
                         m_iwbWebDriver.FindElement(By.XPath("/html/body/div[8]/div[2]/table/thead/tr/th[1]")).Click();
@@ -365,7 +405,217 @@ namespace Selenium_DB_Excel
         {
             int noValidations = Regex.Matches(validationString,"Validation successful").Count;
             return noValidations + " validations succesful";
-        } 
+        }
+
+        private void SelectDate(DateTime dbDate, IWebElement webElement)
+        {
+            //webElement.Click();
+            Actions action = new Actions(m_iwbWebDriver);
+
+            int monthDB = int.Parse(dbDate.Month.ToString());
+            Console.WriteLine(monthDB);
+            string daySelct = dbDate.Day.ToString();
+            Console.WriteLine(daySelct);
+
+            IWebElement days = m_iwbWebDriver.FindElement(By.ClassName("datepicker-days"));
+            IWebElement dayTable = days.FindElement(By.TagName("table"));
+            IWebElement daysBody = days.FindElement(By.TagName("tbody")); //body of the table that holds the days
+            IWebElement daysHeader = days.FindElement(By.TagName("thead")); //header of the table that holds the days
+
+            IWebElement switchBtn = daysHeader.FindElement(By.ClassName("switch"));
+            action.MoveToElement(switchBtn).Click().Build().Perform();
+            //switchBtn.Click(); //Tenemos que darle click para poder hacer que se vea la tabla de los meses
+
+            IWebElement months = m_iwbWebDriver.FindElement(By.ClassName("datepicker-months"));
+            IWebElement monthTable = months.FindElement(By.TagName("table"));
+            IWebElement monthsHeader = months.FindElement(By.TagName("thead"));
+            IWebElement monthsYear = monthsHeader.FindElement(By.ClassName("switch"));
+            IWebElement yearPrev = monthsHeader.FindElement(By.ClassName("prev"));
+            IWebElement yearNext = monthsHeader.FindElement(By.ClassName("next"));
+            //string mytxt = monthsYear.Text;
+            //Console.WriteLine(mytxt);
+            //SelectYear(monthsYear.Text, yearPrev, yearNext, monthsYear);
+            
+
+            IWebElement monthsBody = months.FindElement(By.TagName("tbody"));
+            IList<IWebElement> monthsSelect = monthsBody.FindElements(By.TagName("span"));
+            int selectCount = monthsSelect.Count;
+            Console.WriteLine(selectCount);
+
+            for (int i = 0; i < monthsSelect.Count; i++) //Los meses están en orden de manera 0 A n-1.
+            {
+                string monthsTxt = monthsSelect[i].Text;
+                Console.WriteLine(monthsTxt);
+                if (monthDB == i + 1)
+                {
+                    monthsSelect[i].Click(); //Cuando le da click, inmediatamente se va al siguiente campo, no espera a que elijas el día. 
+                    break;
+                }
+            }
+
+            webElement.Click();
+
+            SelectDay(daysBody, daySelct);
+        }
+
+        private void SelectDay(IWebElement daysBody, string daySelct)
+        {
+            IList<IWebElement> dayList = daysBody.FindElements(By.ClassName("day"));
+            Console.WriteLine(dayList.Count);
+            Actions action = new Actions(m_iwbWebDriver); //Webdriver action used to move the cursor to click the search field
+
+            for (int i = 0; i < dayList.Count; i++)
+            {
+                string day = dayList[i].GetAttribute("innerText");
+                Console.WriteLine(day);
+                if (daySelct == day)
+                {
+                    //Click();
+                    action.MoveToElement(dayList[i]).Click().Build().Perform();
+                    break;
+                }
+            }
+        }
+
+        private void SelectYear(string yearText, IWebElement prevButton, IWebElement nextButton, IWebElement headerTitle)
+        {
+            int yearInt = int.Parse(yearText);
+            Console.WriteLine(yearText);
+            Console.WriteLine(yearInt);
+
+            if (yearInt > 2018)
+            {
+                while (yearInt != 2018)
+                {
+                    prevButton.Click();
+                    //monthsYear = monthsHeader.FindElement(By.ClassName("switch"));
+                    yearText = headerTitle.Text;
+                    yearInt = int.Parse(yearText);
+                }
+            }
+            else
+            {
+                if (yearInt < 2018)
+                {
+                    while (yearInt != 2018)
+                    {
+                        nextButton.Click();
+                        //monthsYear = monthsHeader.FindElement(By.ClassName("switch"));
+                        yearText = headerTitle.Text;
+                        yearInt = int.Parse(yearText);
+                    }
+                }
+            }
+        }
+
+        private void CheckYear(DateTime date, IWebElement webElement)
+        {
+            int monthSelct = int.Parse(date.Month.ToString()); //mes actual
+
+            string daySelct = date.Day.ToString(); //día actual
+
+            int dayCheck = int.Parse(daySelct); //día actual convertido en int
+            DateTime local = DateTime.Today;
+            int monthNow = int.Parse(local.Date.Month.ToString());
+            int today = int.Parse(local.Date.Day.ToString());
+
+            //var year = m_iwbWebDriver.FindElement(By.XPath("//*[@class='switch']"));
+            //string yearText = year.GetAttribute("textContent"); //innerText da "Mes Año" como resultado
+            //Console.WriteLine(yearText);
+            //m_iwbWebDriver.FindElement(By.XPath("//*[@class='switch']")).Click();
+            //yearText = year.GetAttribute("innerText");
+            //Console.WriteLine(yearText);
+
+            IWebElement tableBody = m_iwbWebDriver.FindElement(By.XPath("//table/tbody"));
+            IWebElement tableHeader = m_iwbWebDriver.FindElement(By.XPath("//table/thead"));
+
+            IList<IWebElement> tableRows = tableBody.FindElements(By.TagName("tr"));
+            int rows_count = tableRows.Count();
+            Console.WriteLine(rows_count); //Da igual a 6, que es el número de filas del calendario como tal para un mes
+
+            IList<IWebElement> tableCells = tableBody.FindElements(By.TagName("td"));
+            int cell_count = tableCells.Count();
+            Console.WriteLine(cell_count); //Da igual a 42 que es el número de celdas que tiene el calendario para un mes
+
+            IList<IWebElement> row = tableHeader.FindElements(By.TagName("tr"));
+            IList<IWebElement> heads = tableHeader.FindElements(By.TagName("th"));
+            int rc = row.Count;
+            int hc = heads.Count;
+            Console.WriteLine(rc); //Da como resultado 2 filas porque son la fila del nombre del mes y el año junto con prev y next y además la fila de los días de la semana
+            Console.WriteLine(hc); //Da como resultado 10 porque son los nombres de los botones (3) más los días de la semana (7)
+            IWebElement switchBtn = tableHeader.FindElement(By.ClassName("switch"));
+            switchBtn.Click(); //Tenemos que darle click para poder hacer que se vea la tabla de los meses
+
+            //-------------There are two tables, one for months, one for days
+
+            IWebElement months = m_iwbWebDriver.FindElement(By.ClassName("datepicker-months"));
+            IWebElement monthTable = months.FindElement(By.TagName("table"));
+
+            IWebElement monthsHeader = months.FindElement(By.TagName("thead"));
+            IList<IWebElement> monthsHeaders = monthsHeader.FindElements(By.TagName("th"));
+            int hcount = monthsHeaders.Count;
+            Console.WriteLine(hcount);
+            IWebElement monthsYear = monthsHeader.FindElement(By.ClassName("switch"));
+            IWebElement yearPrev = monthsHeader.FindElement(By.ClassName("prev"));
+            IWebElement yearNext = monthsHeader.FindElement(By.ClassName("next"));
+            string mytxt = monthsYear.Text;
+            Console.WriteLine(mytxt);
+            int yearInt = int.Parse(mytxt);
+            Console.WriteLine(mytxt);
+
+            if (yearInt > 2018)
+            {
+                while (yearInt != 2018)
+                {
+                    yearPrev.Click();
+                    monthsYear = monthsHeader.FindElement(By.ClassName("switch"));
+                    mytxt = monthsYear.Text;
+                    yearInt = int.Parse(mytxt);
+                }
+            }
+            else
+            {
+                if (yearInt < 2018)
+                {
+                    while (yearInt != 2018)
+                    {
+                        yearNext.Click();
+                        monthsYear = monthsHeader.FindElement(By.ClassName("switch"));
+                        mytxt = monthsYear.Text;
+                        yearInt = int.Parse(mytxt);
+                    }
+                }
+            }
+
+            IWebElement monthsBody = months.FindElement(By.TagName("tbody"));
+            IList<IWebElement> monthsSelect = monthsBody.FindElements(By.TagName("span"));
+            int selectCount = monthsSelect.Count;
+            Console.WriteLine(selectCount);
+
+            for (int i = 0; i < monthsSelect.Count; i++) //Los meses están en orden de manera 0 A n-1.
+            {
+                string monthsTxt = monthsSelect[i].Text;
+                Console.WriteLine(monthsTxt);
+                if (monthSelct == i + 1)
+                {
+                    monthsSelect[i].Click(); //Cuando le da click, inmediatamente se va al siguiente campo, no espera a que elijas el día. 
+                    break;
+                }
+            }
+
+            webElement.Click();
+            IList<IWebElement> dayList = tableBody.FindElements(By.ClassName("day"));
+            Console.WriteLine(dayList.Count);
+
+            for (int i = 0; i < dayList.Count; i++)
+            {
+                if(daySelct == dayList[i].Text)
+                {
+                    dayList[i].Click();
+                    break;
+                }
+            }
+        }
 
     }
 }
