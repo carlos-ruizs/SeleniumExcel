@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
@@ -136,7 +138,7 @@ namespace Selenium_DB_Excel
                         var element = m_iwbWebDriver.FindElement(By.XPath("//*[@class='select2-chosen']"));
                         string elementText = element.Text;
                         resultsLoginString += IsValid(element.Displayed);
-                        
+
                         //Checks if the check in field doesn't have anything inside of it, same thing applies to the check out field
                         var elementCkin = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']"));
                         string elementCkinText = elementCkin.GetAttribute("value");
@@ -170,7 +172,8 @@ namespace Selenium_DB_Excel
                         updateLogin.Parameters.Clear();
                         break;
 
-                    case 2: 
+                    case 2:
+                        var wait1 = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(30));
                         Console.WriteLine(local.Date.ToString("dd/MM/yyyy"));
                         DateTime dbDate = DateTime.Parse(loginRows[i]["Date"].ToString());
 
@@ -178,90 +181,86 @@ namespace Selenium_DB_Excel
                         Console.WriteLine(monthDB);
                         int dayDB = int.Parse(dbDate.Day.ToString());
                         Console.WriteLine(dayDB);
+                        int yearDB = int.Parse(dbDate.Year.ToString());
+                        Console.WriteLine(yearDB);
 
                         int monthNow = int.Parse(local.Date.Month.ToString());
                         int today = int.Parse(local.Date.Day.ToString());
+                        int thisYear = int.Parse(local.Date.Year.ToString());
 
-                        if (monthDB < monthNow)
+                        //This checks if the date inside the database is equal to today's or a future date so that the program can work correctly
+                        if (yearDB < thisYear)
                         {
                             Console.WriteLine("Date inside the database is before today");
                             break;
                         }
                         else
                         {
-                            if(monthDB > monthNow)
+                            if (yearDB > thisYear)
                             {
-                                
+
                             }
                             else
                             {
-                                if (dayDB < today)
+                                if (monthDB < monthNow)
                                 {
-                                    Console.WriteLine("Date is before today");
+                                    Console.WriteLine("Date inside the database is before today");
                                     break;
+                                }
+                                else
+                                {
+                                    if (monthDB > monthNow)
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        if (dayDB < today)
+                                        {
+                                            Console.WriteLine("Date is before today");
+                                            break;
+                                        }
+                                    }
                                 }
                             }
                         }
 
+                        //This part is what gets the check in and check out buttons and sends a regular date to the fields and then clears them
                         IWebElement checkInBtn = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']"));
                         IWebElement checkOutBtn = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']"));
-                        //TODO change 
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).SendKeys(dbDate.Date.ToString("dd/MM/yyyy"));
-                        //wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.XPath("//*[@class='table-condensed']")));
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).SendKeys(dbDate.Date.AddDays(1).ToString("dd/MM/yyyy"));
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).Clear();
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).Clear();
+                        checkInBtn.SendKeys(dbDate.Date.ToString("dd/MM/yyyy"));
+                        checkOutBtn.SendKeys(dbDate.Date.AddDays(5).ToString("dd/MM/yyyy"));
+                        checkInBtn.Clear();
+                        checkOutBtn.Clear();
 
+                        //This parts clicks the fields again to select the date from the tables
+                        //First it clicks the check in button, gets the table elements from the website and uses the corresponding table body to select the day with the SelectDay method
+                        //The check out button is not pressed since it automatically is pressed when the check in date is selected.
                         checkInBtn.Click();
-                        SelectDate(dbDate,checkInBtn);
-                        IWebElement days = m_iwbWebDriver.FindElement(By.ClassName("datepicker-days"));
-                        IWebElement daysBody = days.FindElement(By.TagName("tbody"));
-                        //checkOutBtn.Click();
-                        SelectDay(daysBody, dbDate.AddDays(5).Day.ToString());
-                        //SelectDate(dbDate.AddDays(5),checkOutBtn);
+                        IJavaScriptExecutor js = (IJavaScriptExecutor)m_iwbWebDriver;
+                        IList<IWebElement> daysTable = m_iwbWebDriver.FindElements(By.ClassName("datepicker-days"));
+                        Console.WriteLine(daysTable.Count);
+                        IWebElement daysBody = daysTable[0].FindElement(By.TagName("tbody"));
+                        SelectDay(daysBody, dbDate.Day.ToString());
+                        IWebElement daysBod2 = daysTable[1].FindElement(By.TagName("tbody"));
+                        SelectDay(daysBod2, dbDate.AddDays(5).Day.ToString());
 
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).Click();
-                        //Se tiene que agregar una manera en la que le de click a la cosa del mes para poder llegar al mes actual
-                        CheckYear(dbDate, checkInBtn); //Vamos a ponerle la fecha que quiero, el elemento al que quiero darle click
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@class='switch']")).Click();
-                        m_iwbWebDriver.FindElement(By.XPath("/html/body/div[8]/div[2]/table/thead/tr/th[1]")).Click();
-                        m_iwbWebDriver.FindElement(By.XPath("/html/body/div[8]/div[2]/table/thead/tr/th[1]")).Click();
-                        m_iwbWebDriver.FindElement(By.XPath("/html/body/div[8]/div[2]/table/tbody/tr/td/span[7]")).Click();
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkin']")).Click();
-                        m_iwbWebDriver.FindElement(By.XPath("/html/body/div[8]/div[1]/table/tbody/tr[5]/td[6]")).Click();//Clicks the date in the calendar pop up
+                        string checkInValue = checkInBtn.GetAttribute("value");
+                        Console.WriteLine(checkInValue);
+                        resultsLoginString += IsValid(checkInValue == dbDate.Date.ToString("dd/MM/yyyy"));
+                        string checkOutValue = checkOutBtn.GetAttribute("value");
+                        Console.WriteLine(checkOutValue);
+                        resultsLoginString += IsValid(checkOutValue == dbDate.AddDays(5).Date.ToString("dd/MM/yyyy"));
 
-                        var Ckin = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']"));
-                        string CkinText = Ckin.GetAttribute("value");
-                        Console.WriteLine("check in:" + CkinText);
-
-                        //if (CkinText == local.Date.ToString("dd/MM/yyyy"))
-                        //{
-                        //    Console.WriteLine("Fecha correcta");
-                        //    resultsLoginString += "Correct date added";
-                        //    validateLoginString += "First date added correctly";
-                        //}
-                            
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).Clear();
-                        m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']")).Click(); //Hay que esperar a que le de click y el calendario esté visible, de ahí sería ver que escoja el día correcto. 
-                        //wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementIsVisible(By.CssSelector("div.datepicker:nth-child(14)")));
-                        //m_iwbWebDriver.FindElement(By.XPath("//*[@class='prev']")).Click();
-                        //m_iwbWebDriver.FindElement(By.XPath("//*[@class='prev']")).Click();
-                        m_iwbWebDriver.FindElement(By.XPath("/html/body/div[9]/div[1]/table/tbody/tr[6]/td[4]")).Click(); //Clicks the date in the calendar pop up
-
-                        var Ckout = m_iwbWebDriver.FindElement(By.XPath("//*[@name='checkout']"));
-                        string CkoutText = Ckout.GetAttribute("value");
-                        Console.WriteLine("check out:" + CkoutText);
-
-                        if (CkoutText == local.Date.AddDays(5).ToString("d"))
-                            Console.WriteLine("Fecha correcta");
+                        validateLoginString += ValidCount(resultsLoginString);
 
                         //Updates the database and clears the parameters
                         loginRows[i]["ResultsLogin"] = " ";
 
-                        param1.Value = "Correct results added";
+                        param1.Value = resultsLoginString;
                         updateLogin.Parameters.Add(param1);
 
-                        param2.Value = "Correct dates added";
+                        param2.Value = validateLoginString;
                         updateLogin.Parameters.Add(param2);
 
                         param3.Value = switchOption;
@@ -321,7 +320,7 @@ namespace Selenium_DB_Excel
                     case 4:
                         var wait = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(30)); //Wait used for when we want to check if the results drop list exists
                         var elemnt = m_iwbWebDriver.FindElement(By.XPath("//*[@name='hotel_s2_text']"));
-                        
+
                         Actions action = new Actions(m_iwbWebDriver); //Webdriver action used to move the cursor to click the search field
                         action.MoveToElement(elemnt).Click().Build().Perform();
                         wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.ClassName("select2-no-results"))); //waits for the textbox that appears when you click the search field
@@ -392,10 +391,12 @@ namespace Selenium_DB_Excel
             if (pb_expression)
             {
                 validation += "Validation successful ";
+                TakeScreenshot(@"C:\Users\cruiz\Documents\TestCases_Screenshots\", "Valid");
             }
             else
             {
                 validation += "Validation unsuccessful ";
+                TakeScreenshot(@"C:\Users\cruiz\Documents\TestCases_Screenshots\", "Invalid");
             }
 
             return validation;
@@ -403,75 +404,34 @@ namespace Selenium_DB_Excel
 
         private string ValidCount(string validationString)
         {
-            int noValidations = Regex.Matches(validationString,"Validation successful").Count;
+            int noValidations = Regex.Matches(validationString, "Validation successful").Count;
             return noValidations + " validations succesful";
         }
 
-        private void SelectDate(DateTime dbDate, IWebElement webElement)
+        private void SelectDay(IWebElement tableBody, string daySelected)
         {
-            //webElement.Click();
-            Actions action = new Actions(m_iwbWebDriver);
+            IList<IWebElement> tableRows = tableBody.FindElements(By.TagName("tr"));
 
-            int monthDB = int.Parse(dbDate.Month.ToString());
-            Console.WriteLine(monthDB);
-            string daySelct = dbDate.Day.ToString();
-            Console.WriteLine(daySelct);
-
-            IWebElement days = m_iwbWebDriver.FindElement(By.ClassName("datepicker-days"));
-            IWebElement dayTable = days.FindElement(By.TagName("table"));
-            IWebElement daysBody = days.FindElement(By.TagName("tbody")); //body of the table that holds the days
-            IWebElement daysHeader = days.FindElement(By.TagName("thead")); //header of the table that holds the days
-
-            IWebElement switchBtn = daysHeader.FindElement(By.ClassName("switch"));
-            action.MoveToElement(switchBtn).Click().Build().Perform();
-            //switchBtn.Click(); //Tenemos que darle click para poder hacer que se vea la tabla de los meses
-
-            IWebElement months = m_iwbWebDriver.FindElement(By.ClassName("datepicker-months"));
-            IWebElement monthTable = months.FindElement(By.TagName("table"));
-            IWebElement monthsHeader = months.FindElement(By.TagName("thead"));
-            IWebElement monthsYear = monthsHeader.FindElement(By.ClassName("switch"));
-            IWebElement yearPrev = monthsHeader.FindElement(By.ClassName("prev"));
-            IWebElement yearNext = monthsHeader.FindElement(By.ClassName("next"));
-            //string mytxt = monthsYear.Text;
-            //Console.WriteLine(mytxt);
-            //SelectYear(monthsYear.Text, yearPrev, yearNext, monthsYear);
-            
-
-            IWebElement monthsBody = months.FindElement(By.TagName("tbody"));
-            IList<IWebElement> monthsSelect = monthsBody.FindElements(By.TagName("span"));
-            int selectCount = monthsSelect.Count;
-            Console.WriteLine(selectCount);
-
-            for (int i = 0; i < monthsSelect.Count; i++) //Los meses están en orden de manera 0 A n-1.
+            foreach (var rows in tableRows)
             {
-                string monthsTxt = monthsSelect[i].Text;
-                Console.WriteLine(monthsTxt);
-                if (monthDB == i + 1)
+                try
                 {
-                    monthsSelect[i].Click(); //Cuando le da click, inmediatamente se va al siguiente campo, no espera a que elijas el día. 
-                    break;
+                    var tds = rows.FindElements(By.ClassName("day"));
+                    string dataRows = rows.GetAttribute("innerText");
+                    Console.WriteLine(dataRows);
+                    foreach (var td in tds)
+                    {
+                        string data = td.GetAttribute("innerText");
+                        Console.WriteLine(data);
+                        if (data == daySelected)
+                        {
+                            td.Click();
+                            break;
+                        }
+                    }
                 }
-            }
-
-            webElement.Click();
-
-            SelectDay(daysBody, daySelct);
-        }
-
-        private void SelectDay(IWebElement daysBody, string daySelct)
-        {
-            IList<IWebElement> dayList = daysBody.FindElements(By.ClassName("day"));
-            Console.WriteLine(dayList.Count);
-            Actions action = new Actions(m_iwbWebDriver); //Webdriver action used to move the cursor to click the search field
-
-            for (int i = 0; i < dayList.Count; i++)
-            {
-                string day = dayList[i].GetAttribute("innerText");
-                Console.WriteLine(day);
-                if (daySelct == day)
+                catch (OpenQA.Selenium.StaleElementReferenceException SERE)
                 {
-                    //Click();
-                    action.MoveToElement(dayList[i]).Click().Build().Perform();
                     break;
                 }
             }
@@ -609,7 +569,7 @@ namespace Selenium_DB_Excel
 
             for (int i = 0; i < dayList.Count; i++)
             {
-                if(daySelct == dayList[i].Text)
+                if (daySelct == dayList[i].Text)
                 {
                     dayList[i].Click();
                     break;
@@ -617,5 +577,15 @@ namespace Selenium_DB_Excel
             }
         }
 
+        private void TakeScreenshot(string Path, string fileName)
+        {
+            StringBuilder TimeAndDate = new StringBuilder(DateTime.Now.ToString());
+            TimeAndDate.Replace("/", "_");
+            TimeAndDate.Replace(":", "_");
+
+            Screenshot file = ((ITakesScreenshot)m_iwbWebDriver).GetScreenshot();
+
+            file.SaveAsFile(Path + fileName + TimeAndDate.ToString() + ".jpeg", ScreenshotImageFormat.Jpeg);
+        }
     }
 }
