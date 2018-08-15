@@ -15,3 +15,6 @@ the Excel file we want to work with.
 create a workbook, worksheet, to iterate through rows, columns, etc. 
 
 This project will be improving constantly and changing stuff as I'm learning how to use both Selenium and C#.
+
+**Updates 08/15/2018**
+Added a new solution to the project. With that addition, the program can now choose between using a database in SQL Server or the Excel spreadsheet to get the information and execute the test cases.
