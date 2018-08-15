@@ -73,40 +73,51 @@ namespace Selenium_DB_Excel
         /// </summary>
         public void Search()
         {
-            m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
-            DataRow[] searchRows = masterTable.Select("Actions = 'Search'"); //Gets the rows in the DataTable with the Search action to work exclusively on them
-
-            for (int i = 0; i < searchRows.Length; i++)
+            try
             {
-                int elementsToSave = int.Parse(searchRows[i]["NoResultsToSave"].ToString()); //Gets the number of links to save from the current search and converts it to an integer
-                m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(searchRows[i]["InputParameter"].ToString()); //Gets the string in the InputParameter column and sends it to the search bar
+                m_iwbWebDriver.Navigate().GoToUrl("http://www.google.com/");
+                DataRow[] searchRows = masterTable.Select("Actions = 'Search'"); //Gets the rows in the DataTable with the Search action to work exclusively on them
 
-                if (m_iwbWebDriver.Url == "https://www.google.com/?gws_rd=ssl" || m_iwbWebDriver.Url == "https://www.google.com/")
+                for (int i = 0; i < searchRows.Length; i++)
                 {
-                    m_iwbWebDriver.FindElement(By.Name("btnK")).Click();
+                    int elementsToSave = int.Parse(searchRows[i]["NoResultsToSave"].ToString()); //Gets the number of links to save from the current search and converts it to an integer
+                    m_iwbWebDriver.FindElement(By.Id("lst-ib")).SendKeys(searchRows[i]["InputParameter"].ToString()); //Gets the string in the InputParameter column and sends it to the search bar
+
+                    if (m_iwbWebDriver.Url == "https://www.google.com/?gws_rd=ssl" || m_iwbWebDriver.Url == "https://www.google.com/")
+                    {
+                        m_iwbWebDriver.FindElement(By.Name("btnK")).Click();
+                    }
+                    else
+                    {
+                        m_iwbWebDriver.FindElement(By.Name("btnG")).Click();
+                    }
+
+                    IList<IWebElement> h3Links = m_iwbWebDriver.FindElements(By.ClassName("g")); //saves all the links inside the webpage from the "g" class into an IList
+                    string totalSearchResults = m_iwbWebDriver.FindElement(By.Id("resultStats")).Text; //gets the total amount of results for that particular search
+                    IList<IWebElement> relatedResults = m_iwbWebDriver.FindElements(By.ClassName("nVcaUb")); //saves the links for all the related searches results into an IList
+
+                    //Inserts the results of the search into the Master DataTable
+                    searchRows[i]["TotalResults"] = support.GetTotalSearchResults(totalSearchResults);
+                    searchRows[i]["SavedResultsLinks"] = support.GetResultsHref(h3Links, elementsToSave - 1);
+                    searchRows[i]["SavedResultsText"] = support.GetResultsTxt(h3Links, elementsToSave - 1);
+                    searchRows[i]["RelatedResultsLinks"] = support.GetResultsHref(relatedResults, relatedResults.Count - 1);
+                    searchRows[i]["RelatedResultsText"] = support.GetResultsTxt(relatedResults, relatedResults.Count - 1);
+
+                    m_iwbWebDriver.FindElement(By.Id("lst-ib")).Clear(); //Clears the search bar for the next word
                 }
-                else
-                {
-                    m_iwbWebDriver.FindElement(By.Name("btnG")).Click();
-                }
-
-                IList<IWebElement> h3Links = m_iwbWebDriver.FindElements(By.ClassName("g")); //saves all the links inside the webpage from the "g" class into an IList
-                string totalSearchResults = m_iwbWebDriver.FindElement(By.Id("resultStats")).Text; //gets the total amount of results for that particular search
-                IList<IWebElement> relatedResults = m_iwbWebDriver.FindElements(By.ClassName("nVcaUb")); //saves the links for all the related searches results into an IList
-
-                //Inserts the results of the search into the Master DataTable
-                searchRows[i]["TotalResults"] = support.GetTotalSearchResults(totalSearchResults);
-                searchRows[i]["SavedResultsLinks"] = support.GetResultsHref(h3Links, elementsToSave - 1);
-                searchRows[i]["SavedResultsText"] = support.GetResultsTxt(h3Links, elementsToSave - 1);
-                searchRows[i]["RelatedResultsLinks"] = support.GetResultsHref(relatedResults, relatedResults.Count - 1);
-                searchRows[i]["RelatedResultsText"] = support.GetResultsTxt(relatedResults, relatedResults.Count - 1);
-
-                m_iwbWebDriver.FindElement(By.Id("lst-ib")).Clear(); //Clears the search bar for the next word
+                daAdapter.Update(dataSet.Tables["Master"]); //Uses the updated Master table to update the database
             }
-            daAdapter.Update(dataSet.Tables["Master"]); //Uses the updated Master table to update the database
+            catch (System.NullReferenceException NRE)
+            {
+                Console.WriteLine("Next set of test cases");
+            }
         }
 
-        //@TODO Make it so that whenever something is validated, the program takes a screenshot of the webpage for future reference
+        /// <summary>
+        /// Gets the rows with the "Reservation" action to go to the phptravels website and perform a set of instructions depending on 
+        /// the test case that is executing. If the test case isn't found, then it goes to the next one until it founds none. It uses 
+        /// a stored procedure from inside the database to make the necessary updates to it based on the results of the instructions.
+        /// </summary>
         public void Reservation()
         {
             DateTime local = DateTime.Today; //Used to get the date for the test cases that need it
@@ -174,16 +185,11 @@ namespace Selenium_DB_Excel
 
                     case 2:
                         var wait1 = new WebDriverWait(m_iwbWebDriver, TimeSpan.FromSeconds(30));
-                        Console.WriteLine(local.Date.ToString("dd/MM/yyyy"));
                         DateTime dbDate = DateTime.Parse(loginRows[i]["Date"].ToString());
 
                         int monthDB = int.Parse(dbDate.Month.ToString());
-                        Console.WriteLine(monthDB);
                         int dayDB = int.Parse(dbDate.Day.ToString());
-                        Console.WriteLine(dayDB);
                         int yearDB = int.Parse(dbDate.Year.ToString());
-                        Console.WriteLine(yearDB);
-
                         int monthNow = int.Parse(local.Date.Month.ToString());
                         int today = int.Parse(local.Date.Day.ToString());
                         int thisYear = int.Parse(local.Date.Year.ToString());
@@ -239,17 +245,14 @@ namespace Selenium_DB_Excel
                         checkInBtn.Click();
                         IJavaScriptExecutor js = (IJavaScriptExecutor)m_iwbWebDriver;
                         IList<IWebElement> daysTable = m_iwbWebDriver.FindElements(By.ClassName("datepicker-days"));
-                        Console.WriteLine(daysTable.Count);
                         IWebElement daysBody = daysTable[0].FindElement(By.TagName("tbody"));
                         SelectDay(daysBody, dbDate.Day.ToString());
                         IWebElement daysBod2 = daysTable[1].FindElement(By.TagName("tbody"));
                         SelectDay(daysBod2, dbDate.AddDays(5).Day.ToString());
 
                         string checkInValue = checkInBtn.GetAttribute("value");
-                        Console.WriteLine(checkInValue);
                         resultsLoginString += IsValid(checkInValue == dbDate.Date.ToString("dd/MM/yyyy"));
                         string checkOutValue = checkOutBtn.GetAttribute("value");
-                        Console.WriteLine(checkOutValue);
                         resultsLoginString += IsValid(checkOutValue == dbDate.AddDays(5).Date.ToString("dd/MM/yyyy"));
 
                         validateLoginString += ValidCount(resultsLoginString);
@@ -384,6 +387,12 @@ namespace Selenium_DB_Excel
             }
         }
 
+        /// <summary>
+        /// Receives a boolean expression and evaluates if it's true or false. Depending on the result, it will
+        /// return a message with the result of the validation and it will take a screenshot of the webpage.
+        /// </summary>
+        /// <param name="pb_expression"></param>
+        /// <returns></returns>
         private string IsValid(bool pb_expression)
         {
             string validation = null;
@@ -402,12 +411,26 @@ namespace Selenium_DB_Excel
             return validation;
         }
 
+        /// <summary>
+        /// Gets the string where the results for the IsValid method were appended and counts how many succesful validation
+        /// strings exist and returns the amount of patterns it found. 
+        /// </summary>
+        /// <param name="validationString"></param>
+        /// <returns></returns>
         private string ValidCount(string validationString)
         {
             int noValidations = Regex.Matches(validationString, "Validation successful").Count;
             return noValidations + " validations succesful";
         }
 
+        /// <summary>
+        /// Gets the body of the table that will be used and the day that we want to select from that table.
+        /// It then uses that table to find it's rows and the cells inside those rows and goes through every one of those until
+        /// it finds the element we want, clicks it and gets out of the cycle. The foreach cycle is inside a try-catch block to prevent it from crashing
+        /// because the moment you click on the element, the table disappears and Selenium cannot find the table.
+        /// </summary>
+        /// <param name="tableBody"></param>
+        /// <param name="daySelected"></param>
         private void SelectDay(IWebElement tableBody, string daySelected)
         {
             IList<IWebElement> tableRows = tableBody.FindElements(By.TagName("tr"));
@@ -418,11 +441,9 @@ namespace Selenium_DB_Excel
                 {
                     var tds = rows.FindElements(By.ClassName("day"));
                     string dataRows = rows.GetAttribute("innerText");
-                    Console.WriteLine(dataRows);
                     foreach (var td in tds)
                     {
                         string data = td.GetAttribute("innerText");
-                        Console.WriteLine(data);
                         if (data == daySelected)
                         {
                             td.Click();
@@ -577,6 +598,12 @@ namespace Selenium_DB_Excel
             }
         }
 
+        /// <summary>
+        /// Method that takes a screenshot of the webpage. It receives the path where the file will be saved
+        /// and the name of the file and saves the screenshot in .Jpeg format with the date and time when the screenshot was taken.
+        /// </summary>
+        /// <param name="Path"></param>
+        /// <param name="fileName"></param>
         private void TakeScreenshot(string Path, string fileName)
         {
             StringBuilder TimeAndDate = new StringBuilder(DateTime.Now.ToString());
