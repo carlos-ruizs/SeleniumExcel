@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Net;
 using System.IO;
 using System.Drawing;
 using System.Text.RegularExpressions;
@@ -355,11 +356,22 @@ namespace Selenium_DB_Excel
 
                         m_iwbWebDriver.FindElement(By.XPath("//*[@class='btn btn-lg btn-block btn-danger pfb0 loader']")).Click(); //Clicks the search button
 
-                        //wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.CssSelector(".ellipsis ttu")));//Waits for the webpage to load. Check further
-
                         resultsLoginString += IsValid(m_iwbWebDriver.Url != "https://www.phptravels.net/"); //This is to see if the webpage changes after the search button is clicked
 
                         resultsLoginString += IsValid(m_iwbWebDriver.Url.Contains(hotelTxt)); //This is to see if the webpage has the info for the chosen hotel
+
+                        //This will be a section where we check if the page loaded correctly-------------------------------------
+                        //We have to check two elements that aren't loading correctly: the map from Google Maps and the image of the Available Rooms section
+                        CheckLinks(".img-responsive", "src");
+                        Console.ReadKey();
+
+                        IWebElement map = m_iwbWebDriver.FindElement(By.Id("map"));
+
+                        //IWebElement error = map.FindElement(By.TagName("span"));
+                        string innerTxt = map.GetAttribute("innerText");
+
+                        Console.WriteLine(innerTxt);
+                        //-------------------------------------------------------------------------------------------------------
 
                         validateLoginString += ValidCount(resultsLoginString);
 
@@ -614,5 +626,37 @@ namespace Selenium_DB_Excel
 
             file.SaveAsFile(Path + fileName + TimeAndDate.ToString() + ".jpeg", ScreenshotImageFormat.Jpeg);
         }
+
+        private void CheckLinks(string selectorToFind, string attributeToFind)
+        {
+            HttpWebRequest request = null;
+            var urls = m_iwbWebDriver.FindElements(By.CssSelector(selectorToFind));
+
+            foreach (var url in urls)
+            {
+                Console.WriteLine(url.GetAttribute(attributeToFind));
+                try
+                {
+                    request = (HttpWebRequest)WebRequest.Create(url.GetAttribute(attributeToFind));
+                    try
+                    {
+                        var response = (HttpWebResponse)request.GetResponse();
+                        Console.WriteLine($"URL: {url.GetAttribute(attributeToFind)} status is :{response.StatusCode}");
+                    }
+                    catch (WebException we)
+                    {
+                        var errorResponse = (HttpWebResponse)we.Response;
+                        Console.WriteLine($"URL: {url.GetAttribute(attributeToFind)} status is :{errorResponse.StatusCode}");
+                    }
+                }
+                catch (OpenQA.Selenium.StaleElementReferenceException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            }
+        }
+
+        //Add a logs method that gets if something was succesful or not and what exactly it did and 
+        //if something had an error, it should give us the error message. It should also be saved inside a file like a txt file.
     }
 }
