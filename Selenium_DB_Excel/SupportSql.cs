@@ -26,6 +26,7 @@ namespace Selenium_DB_Excel
         private Support support;
         SqlDataAdapter daAdapter;
         SqlCommandBuilder commandBuilder;
+        string filePath = @"C:\Users\cruiz\Documents\TestCases_Logs\Logs.txt";
 
         public SupportSql()
         {
@@ -87,15 +88,18 @@ namespace Selenium_DB_Excel
                     if (m_iwbWebDriver.Url == "https://www.google.com/?gws_rd=ssl" || m_iwbWebDriver.Url == "https://www.google.com/")
                     {
                         m_iwbWebDriver.FindElement(By.Name("btnK")).Click();
+                        CreateLogs(i + 1, nameof(SupportSql.Search), " step: search for " + searchRows[i]["InputParameter"].ToString());
                     }
                     else
                     {
                         m_iwbWebDriver.FindElement(By.Name("btnG")).Click();
+                        CreateLogs(i + 1, nameof(SupportSql.Search), " step: search for " + searchRows[i]["InputParameter"].ToString());
                     }
 
                     IList<IWebElement> h3Links = m_iwbWebDriver.FindElements(By.ClassName("g")); //saves all the links inside the webpage from the "g" class into an IList
                     string totalSearchResults = m_iwbWebDriver.FindElement(By.Id("resultStats")).Text; //gets the total amount of results for that particular search
                     IList<IWebElement> relatedResults = m_iwbWebDriver.FindElements(By.ClassName("nVcaUb")); //saves the links for all the related searches results into an IList
+                    
 
                     //Inserts the results of the search into the Master DataTable
                     searchRows[i]["TotalResults"] = support.GetTotalSearchResults(totalSearchResults);
@@ -658,5 +662,17 @@ namespace Selenium_DB_Excel
 
         //Add a logs method that gets if something was succesful or not and what exactly it did and 
         //if something had an error, it should give us the error message. It should also be saved inside a file like a txt file.
+        private void CreateLogs(int caseNumber, string testAction, string extraInfo)
+        {
+            DateTime date = DateTime.Now;
+            string logText= "Executed " + testAction + "#" + caseNumber + extraInfo +" at "+ date.ToLongDateString() +" "+ date.ToShortTimeString() + Environment.NewLine;
+            Console.WriteLine(logText);
+            File.AppendAllText(filePath, logText);
+        }
+
+        private void JavaScriptErrors()
+        {
+
+        }
     }
 }
